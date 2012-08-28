@@ -102,16 +102,21 @@ endfunction
 function! ChangeGlobally#Substitute()
     let l:changedText = getreg(s:register)
     let l:newText = s:GetInsertion(s:range)
-echomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
-
+"****Dechomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
     let l:replace = substitute(escape(l:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
 
+    " To turn the change and following substitutions into a single change, first
+    " undo the deletion and insertion. (I couldn't get them combined with
+    " :undojoin across the :startinsert.)
+    " This also solves the special case when l:changedText is contained in
+    " l:newText; without the undo, we would need to avoid re-applying the
+    " substitution over the just changed part of the line.
+    undo " the insertion of l:newText
+    undo " the deletion of l:changedText
+
     if s:range ==# 'line'
-	" TODO: Special case when l:changedText is contained in l:newText; we
-	" need to avoid re-applying the substitution over the just changed part
-	" of the line.
 	let s:substitution = printf('substitute/\V%s/%s/g',
 	\   l:search,
 	\   l:replace
