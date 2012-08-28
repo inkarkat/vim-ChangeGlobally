@@ -120,8 +120,13 @@ echomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
 	" The line may have been split into multiple lines by the editing.
 	execute "'[,']" . s:substitution . 'e'
     elseif s:range ==# 'buffer'
-	let s:substitution = printf('substitute/\V\^%s/%s\r/',
-	\   l:search,
+	" We need to remove the trailing newline in the search pattern and
+	" anchor the search to the beginning and end of a line, so that only
+	" entire lines are substituted. Were we to alternatively append a \r to
+	" the replacement, the next line would be involved and the cursor
+	" misplaced.
+	let s:substitution = printf('substitute/\V\^%s\$/%s/',
+	\   substitute(l:search, '\\n$', '', ''),
 	\   l:replace
 	\)
 
@@ -138,10 +143,12 @@ echomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
 endfunction
 
 function! ChangeGlobally#Repeat( isVisualMode )
+    " Re-apply the previous substitution (without new insert mode) to the visual
+    " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
 	let l:range = "'<,'>"
     else
-	let l:range = (v:count1 > 1 ? '.,.+'.(v:count1 - 1) : '')
+	let l:range = (v:count1 > 1 ? '.,.+'.(v:count1 - 1) : (s:range ==# 'line' ? '' : '%'))
     endif
 
     try
