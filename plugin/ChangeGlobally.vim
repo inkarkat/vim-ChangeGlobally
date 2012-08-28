@@ -18,14 +18,25 @@ let g:loaded_ChangeGlobally = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-nnoremap <silent> <expr> <Plug>(ChangeGlobally) ChangeGlobally#OperatorExpression()
-if ! hasmapto('<Plug>(ChangeGlobally)', 'n')
-    nmap gc <Plug>(ChangeGlobally)
+nnoremap <silent> <expr> <Plug>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
+if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
+    nmap gc <Plug>(ChangeGloballyOperator)
+endif
+nnoremap <silent> <Plug>(ChangeGloballyLine)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#SetRegister()<Bar>
+\execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
+\call ChangeGlobally#Operator('V')<CR>
+if ! hasmapto('<Plug>(ChangeGloballyLine)', 'n')
+    nmap gcc <Plug>(ChangeGloballyLine)
 endif
 
-vnoremap <silent> <Plug>(ChangeGlobally) :<C-u>call setline('.', getline('.'))<Bar>call ChangeGlobally#SetRegister()<Bar>call ChangeGlobally#Operator(visualmode())<CR>
-if ! hasmapto('<Plug>(ChangeGlobally)', 'v')
-    xmap gc <Plug>(ChangeGlobally)
+vnoremap <silent> <Plug>(ChangeGloballyVisual)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#SetRegister()<Bar>
+\call ChangeGlobally#Operator(visualmode())<CR>
+if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'v')
+    xmap gc <Plug>(ChangeGloballyVisual)
 endif
 
 
