@@ -13,9 +13,10 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! ChangeGlobally#Arm()
+function! ChangeGlobally#SetRegister()
     let s:register = v:register
-
+endfunction
+function! s:ArmInsertMode()
     augroup ChangeGlobally
 	autocmd! InsertLeave * call ChangeGlobally#Substitute() | autocmd! ChangeGlobally
     augroup END
@@ -49,7 +50,7 @@ function! ChangeGlobally#Operator( type )
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
     let l:deleteCommand = (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
-echomsg '****' l:deleteCommand
+
     " TODO: Special case for "_
     execute 'normal! "' . s:register . l:deleteCommand
 
@@ -59,12 +60,13 @@ echomsg '****' l:deleteCommand
 	startinsert
     endif
 
-    " Don't set up the repeat; we're not done yet. The ChangeGlobally#Arm()
-    " installed an autocmd, and the ChangeGlobally#Substitute() will conclude
-    " the command, and set the repeat there.
+    " Don't set up the repeat; we're not done yet. We now install an autocmd,
+    " and the ChangeGlobally#Substitute() will conclude the command, and set the
+    " repeat there.
+    call s:ArmInsertMode()
 endfunction
 function! ChangeGlobally#OperatorExpression()
-    call ChangeGlobally#Arm()
+    call ChangeGlobally#SetRegister()
     set opfunc=ChangeGlobally#Operator
 
     let l:keys = 'g@'
@@ -80,29 +82,53 @@ function! ChangeGlobally#OperatorExpression()
     return l:keys
 endfunction
 
-function! s:GetInsertion()
+function! s:GetInsertion( range )
     " Unfortunately, we cannot simply use register "., because it contains all
     " editing keys, so also <Del> and <BS>, which show up in raw form "<80>kD".
     " Instead, we rely on the range delimited by the marks '[ and '] (last one
     " exclusive).
-    let l:startPos = getpos("'[")[1:2]
+
+    if a:range ==# 'buffer'
+	" There may have been existing indent before we started editing, which
+	" isn't captured by '[, but which we need to correctly reproduce the
+	" change. Therefore, grab the entire starting line.
+	let l:startPos = [line("'["), 1]
+    else
+	let l:startPos = getpos("'[")[1:2]
+    endif
     let l:endPos = [line("']"), (col("']") - 1)]
     return CompleteHelper#ExtractText(l:startPos, l:endPos, {})
 endfunction
 function! ChangeGlobally#Substitute()
     let l:changedText = getreg(s:register)
-    let l:newText = s:GetInsertion()
-"****D echomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
+    let l:newText = s:GetInsertion(s:range)
+echomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
+
+    " For :substitute, we need to convert newlines in both parts (differently).
+    let l:search = substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
+    let l:replace = substitute(escape(l:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
 
     if s:range ==# 'line'
-	" The line may have been split into multiple lines by the editing.
+	" TODO: Special case when l:changedText is contained in l:newText; we
+	" need to avoid re-applying the substitution over the just changed part
+	" of the line.
 	let s:substitution = printf('substitute/\V%s/%s/g',
-	\   escape(l:changedText, '/\'),
-	\   escape(l:newText, '/\'.(&magic ? '&~' : ''))
+	\   l:search,
+	\   l:replace
 	\)
-    endif
 
-    execute "'[,']" . s:substitution . 'e'
+	" The line may have been split into multiple lines by the editing.
+	execute "'[,']" . s:substitution . 'e'
+    elseif s:range ==# 'buffer'
+	let s:substitution = printf('substitute/\V\^%s/%s\r/',
+	\   l:search,
+	\   l:replace
+	\)
+
+	execute "%" . s:substitution . 'e'
+    else
+	throw 'ASSERT: Invalid s:range: ' . string(s:range)
+    endif
 
     " Do not store the [count] here; it is invalid / empty due to the autocmd
     " invocation here, anyway. But allow specifying a custom [count] on
