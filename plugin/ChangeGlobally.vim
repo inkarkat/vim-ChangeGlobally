@@ -23,7 +23,7 @@ if ! hasmapto('<Plug>(ChangeGlobally)', 'n')
     nmap gc <Plug>(ChangeGlobally)
 endif
 
-vnoremap <silent> <Plug>(ChangeGlobally) :<C-u>call setline('.', getline('.'))<Bar>call ChangeGlobally#Arm()<Bar>call ChangeGlobally#Operator(visualmode())<CR>
+vnoremap <silent> <Plug>(ChangeGlobally) :<C-u>call setline('.', getline('.'))<Bar>call ChangeGlobally#SetRegister()<Bar>call ChangeGlobally#Operator(visualmode())<CR>
 if ! hasmapto('<Plug>(ChangeGlobally)', 'v')
     xmap gc <Plug>(ChangeGlobally)
 endif
