@@ -1,6 +1,7 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution on the entire line.
 "
 " DEPENDENCIES:
+"   - CompleteHelper.vim autoload script
 "
 " Copyright: (C) 2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -19,34 +20,49 @@ function! ChangeGlobally#Arm()
 	autocmd! InsertLeave * call ChangeGlobally#Substitute() | autocmd! ChangeGlobally
     augroup END
 endfunction
-function! ChangeGlobally#Operator( type, ... )
+function! ChangeGlobally#Operator( type )
     let l:isAtEndOfLine = 0
 
-    if a:type =~# "^[vV\<C-v>]$"
-	silent! execute 'normal! `<' . a:type . '`>'
+    if a:type ==# 'v'
+	let s:range = 'line'
+	let l:isAtEndOfLine = (col("'>") == col('$'))
+	silent! execute 'normal! gv'
+    elseif a:type ==# 'V'
+	let s:range = 'buffer'
+	silent! execute 'normal! gv'
+    elseif a:type ==# "\<C-v>"
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	return
     elseif a:type ==# 'char'
 	let s:range = 'line'
 	let l:isAtEndOfLine = (col("']") + 1 == col('$'))
 	silent! execute 'normal! `[v`]'. (&selection ==# 'exclusive' ? 'l' : '')
     elseif a:type ==# 'line'
+	let s:range = 'buffer'
 	silent! execute "normal! '[V']"
     elseif a:type ==# 'block'
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	return
     endif
-    " TODO: Special case for "_
-    execute 'normal! "' . s:register . 'd'
 
-    if l:isAtEndOfLine
+    " For linewise deletion, the "s" command collapses all line(s) into a single
+    " one. We insert and remove a dummy character to keep the indent, then leave
+    " insert mode, to be re-entered via :startinsert!
+    let l:deleteCommand = (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+echomsg '****' l:deleteCommand
+    " TODO: Special case for "_
+    execute 'normal! "' . s:register . l:deleteCommand
+
+    if l:isAtEndOfLine || s:range ==# 'buffer'
 	startinsert!
     else
 	startinsert
     endif
 
-    if a:0 | silent! call repeat#set(a:1) | endif
-    silent! call visualrepeat#set("\<Plug>ChangeGloballyVisual")
+    " Don't set up the repeat; we're not done yet. The ChangeGlobally#Arm()
+    " installed an autocmd, and the ChangeGlobally#Substitute() will conclude
+    " the command, and set the repeat there.
 endfunction
-
 function! ChangeGlobally#OperatorExpression()
     call ChangeGlobally#Arm()
     set opfunc=ChangeGlobally#Operator
@@ -80,11 +96,43 @@ function! ChangeGlobally#Substitute()
 
     if s:range ==# 'line'
 	" The line may have been split into multiple lines by the editing.
-	execute printf("'[,']substitute/\\V%s/%s/ge",
+	let s:substitution = printf('substitute/\V%s/%s/g',
 	\   escape(l:changedText, '/\'),
 	\   escape(l:newText, '/\'.(&magic ? '&~' : ''))
 	\)
     endif
+
+    execute "'[,']" . s:substitution . 'e'
+
+    " Do not store the [count] here; it is invalid / empty due to the autocmd
+    " invocation here, anyway. But allow specifying a custom [count] on
+    " repetition (which would be disallowed by passing -1).
+    silent! call       repeat#set("\<Plug>(ChangeGloballyRepeat)", '')
+    silent! call visualrepeat#set("\<Plug>(ChangeGloballyVisualRepeat)", '')
+endfunction
+
+function! ChangeGlobally#Repeat( isVisualMode )
+    if a:isVisualMode
+	let l:range = "'<,'>"
+    else
+	let l:range = (v:count1 > 1 ? '.,.+'.(v:count1 - 1) : '')
+    endif
+
+    try
+	execute l:range . s:substitution
+    catch /^Vim\%((\a\+)\)\=:E/
+	" v:exception contains what is normally in v:errmsg, but with extra
+	" exception source info prepended, which we cut away.
+	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
+	echohl ErrorMsg
+	echomsg v:errmsg
+	echohl None
+
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+    endtry
+
+    silent! call       repeat#set(a:isVisualMode ? "\<Plug>(ChangeGloballyVisualRepeat)" : "\<Plug>(ChangeGloballyRepeat)")
+    silent! call visualrepeat#set("\<Plug>(ChangeGloballyVisualRepeat)")
 endfunction
 
 let &cpo = s:save_cpo
