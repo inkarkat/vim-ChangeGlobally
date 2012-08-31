@@ -54,6 +54,7 @@ function! ChangeGlobally#Operator( type )
     " TODO: Special case for "_
     execute 'normal! "' . s:register . l:deleteCommand
 
+    let s:previousInsertedText = @.
     if l:isAtEndOfLine || s:range ==# 'buffer'
 	startinsert!
     else
@@ -100,6 +101,11 @@ function! s:GetInsertion( range )
     return CompleteHelper#ExtractText(l:startPos, l:endPos, {})
 endfunction
 function! ChangeGlobally#Substitute()
+    " XXX: :startinsert does not clear register . when insertion is aborted
+    " immediately (in Vim 7.3). So compare with the captured previous contents,
+    " too.
+    let l:hasAbortedInsert = getpos("'[") == getpos("']") && (empty(@.) || @. ==# s:previousInsertedText)
+"****D echomsg '****' string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert
     let l:changedText = getreg(s:register)
     let l:newText = s:GetInsertion(s:range)
 "****Dechomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
@@ -113,7 +119,9 @@ function! ChangeGlobally#Substitute()
     " This also solves the special case when l:changedText is contained in
     " l:newText; without the undo, we would need to avoid re-applying the
     " substitution over the just changed part of the line.
-    undo " the insertion of l:newText
+    if ! l:hasAbortedInsert
+	undo " the insertion of l:newText
+    endif
     undo " the deletion of l:changedText
 
     if s:range ==# 'line'
