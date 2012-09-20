@@ -1,7 +1,7 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution on the entire line.
 "
 " DEPENDENCIES:
-"   - CompleteHelper.vim autoload script
+"   - ingointegration.vim autoload script
 "
 " Copyright: (C) 2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -9,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	002	01-Sep-2012	Switch from CompleteHelper#ExtractText() to
+"				ingointegration#GetText().
 "	001	28-Aug-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
@@ -98,7 +100,7 @@ function! s:GetInsertion( range )
 	let l:startPos = getpos("'[")[1:2]
     endif
     let l:endPos = [line("']"), (col("']") - 1)]
-    return CompleteHelper#ExtractText(l:startPos, l:endPos, {})
+    return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
 function! ChangeGlobally#Substitute()
     " XXX: :startinsert does not clear register . when insertion is aborted
