@@ -114,8 +114,14 @@ function! s:GetInsertion( range )
     return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
 function! ChangeGlobally#CountedReplace( count, text, replacement )
-    let s:replaceCnt += 1
-    return (s:replaceCnt <= a:count ? a:replacement : a:text)
+    if s:replaceCnt < a:count
+	let s:replaceCnt += 1
+	let s:lastReplacementLnum = line('.')
+	let s:lastReplacementLines[line('.')] = 1
+	return a:replacement
+    else
+	return a:text
+    endif
 endfunction
 function! ChangeGlobally#Substitute()
     let l:changeStartCol = col("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
@@ -135,6 +141,8 @@ function! ChangeGlobally#Substitute()
 	" replace-expression that counts the number of replacements; unlike a
 	" repeated single substitution, this avoids the issue of re-replacing.
 	let s:replaceCnt = 0
+	let s:lastReplacementLnum = line('.')
+	let s:lastReplacementLines = {}
 	let l:replace = printf('\=ChangeGlobally#CountedReplace(%d, submatch(0), %s)', s:count, string(l:newText))
     else
 	let l:replace = substitute(escape(l:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
@@ -183,8 +191,6 @@ function! ChangeGlobally#Substitute()
 	" Note: The line may have been split into multiple lines by the editing;
 	" use '[, '] instead of the . range.
 	let l:range = (l:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
-"****D echomsg '****' l:range . s:substitution
-	execute l:range . s:substitution . 'e'
     elseif s:range ==# 'buffer'
 	" We need to remove the trailing newline in the search pattern and
 	" anchor the search to the beginning and end of a line, so that only
@@ -196,10 +202,34 @@ function! ChangeGlobally#Substitute()
 	\   l:replace
 	\)
 
-	execute (s:count ? '.,$' : '%') . s:substitution . 'e'
+	let l:range = (s:count ? '.,$' : '%')
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif
+
+"****D echomsg '****' l:range . s:substitution
+    if s:count
+	" It would be nice if we could abort the :substitution when the
+	" s:replaceCnt has been reached. Unfortunately, throwing an exception
+	" from ChangeGlobally#CountedReplace() will still substitute with an
+	" empty string, so we cannot use that. Instead, we have the line number
+	" recorded and jump back to the line with the last substitution.
+	" Because of this, the "N substitutions on M lines" will also be wrong.
+	" We have to suppress the original message and emulate that, too.
+	silent execute l:range . s:substitution . 'e'
+	execute 'normal!' s:lastReplacementLnum . 'G^'
+
+	let l:replacementLines = len(s:lastReplacementLines)
+	if l:replacementLines >= &report
+	    echomsg printf('%d substitution%s on %d line%s',
+	    \   s:replaceCnt, (s:replaceCnt == 1 ? '' : 's'),
+	    \   l:replacementLines, (l:replacementLines == 1 ? '' : 's')
+	    \)
+	endif
+    else
+	execute l:range . s:substitution . 'e'
+    endif
+
 
     " Do not store the [count] here; it is invalid / empty due to the autocmd
     " invocation here, anyway. But allow specifying a custom [count] on
