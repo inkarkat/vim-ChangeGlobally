@@ -1,0 +1,119 @@
+*ChangeGlobally.txt*    Change {motion} text and repeat the substitution on the entire line.
+
+		      CHANGE GLOBALLY    by Ingo Karkat
+							  *ChangeGlobally.vim*
+description			|ChangeGlobally-description|
+usage				|ChangeGlobally-usage|
+installation			|ChangeGlobally-installation|
+limitations			|ChangeGlobally-limitations|
+known problems			|ChangeGlobally-known-problems|
+todo				|ChangeGlobally-todo|
+history				|ChangeGlobally-history|
+
+==============================================================================
+DESCRIPTION					  *ChangeGlobally-description*
+
+Changing existing text is one of the main editing tasks. In Vim, there are two
+approaches: Either one uses of the |c| and |s| commands, then quits insert
+mode, maybe repeating this via |.| at another location. Or one builds a
+|:substitute| command for controlled replacement in the line, range, or
+buffer.
+This plugin implements a hybrid of these two contrasting approaches: It offers
+a |gc| command that works just like built-in |c|, and after leaving insert
+mode applies the local substitution to all other occurrences in the current
+line (in case of a small character change) or, when entire line(s) where
+changed, to the rest of the buffer.
+
+HOW IT WORKS								     *
+
+The |gc| command hooks itself into the |InsertLeave| event, then applies
+something like :s/\=@"/\=@./g to the line or buffer.
+
+SEE ALSO								     *
+
+- ReplaceWithRegister (vimscript #2703) simplifies another frequent editing
+  task: Replace the selection with the contents of register.
+
+==============================================================================
+USAGE							*ChangeGlobally-usage*
+									  *gc*
+["x]gc{motion}		Delete {motion} text [into register x] and start
+			insert. After exiting insert mode, the substitution is
+			globally applied.
+									*v_gc*
+{Visual}["x]gc		Delete the highlighted text [into register x] and
+			start insert. After exiting insert mode, the
+			substitution is globally applied.
+									 *gcc*
+["x]gcc			Delete [count] lines [into register x] and start
+			insert |linewise|. If 'autoindent' is on, preserve the
+			indent of the first line. After exiting insert mode,
+			the substitution is globally applied.
+
+			For a characterwise change, all other occurrences of
+			the deleted text in the changed line(s) are
+			substituted with the newly inserted text.
+			For a linewise change, all other lines that match the
+			deleted line(s) are replaced with the newly inserted
+			text.
+			The mapping is not available in blockwise visual mode.
+
+EXAMPLE						      *ChangeGlobally-example*
+
+Suppose you have a line like this, and you want to change "de" to "en":
+    A[lang=de]:after, SPAN[lang=de]:after { content: url("lang.de.gif"); } ~
+
+With the cursor on the start of any of the "de", type gce, enter the text
+"en", then press <Esc>. The line will turn into
+    A[lang=en]:after, SPAN[lang=en]:after { content: url("lang.en.gif"); } ~
+You can now re-apply this substitution to other lines or a visual selection
+via |.|
+
+==============================================================================
+INSTALLATION					 *ChangeGlobally-installation*
+
+This script is packaged as a |vimball|. If you have the "gunzip" decompressor
+in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
+the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
+vimball or via the |:UseVimball| command. >
+    vim ChangeGlobally*.vmb.gz
+    :so %
+To uninstall, use the |:RmVimball| command.
+
+DEPENDENCIES					 *ChangeGlobally-dependencies*
+
+- Requires Vim 7.0 or higher.
+- repeat.vim (vimscript #2136) plugin (optional)
+- visualrepeat.vim (vimscript #3848) plugin (optional)
+
+==============================================================================
+LIMITATIONS					  *ChangeGlobally-limitations*
+
+KNOWN PROBLEMS				       *ChangeGlobally-known-problems*
+
+TODO							 *ChangeGlobally-todo*
+
+- Implement special case for the black-hole register, where we cannot extract
+  the original text.
+
+IDEAS							*ChangeGlobally-ideas*
+
+- When the changed text is a keyword surrounded by keyword boundaries, make
+  the substitution for s/\<changedText\>/ to avoid false matches.
+
+==============================================================================
+HISTORY						      *ChangeGlobally-history*
+
+GOAL
+First published version.
+
+0.01	29-Aug-2012
+Started development.
+
+==============================================================================
+Copyright: (C) 2012 Ingo Karkat
+The VIM LICENSE applies to this script; see |copyright|.
+
+Maintainer:	Ingo Karkat <ingo@karkat.de>
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:
