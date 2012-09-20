@@ -128,8 +128,9 @@ function! ChangeGlobally#CountedReplace( count )
 	return submatch(0)
     endif
 endfunction
-function! s:Substitute( range )
-echomsg '****' a:range . s:substitution
+function! s:Substitute( range, substitutionArguments )
+    let l:substitutionCommand = a:range . 'substitute/\V' . a:substitutionArguments . 'e'
+echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
 	" It would be nice if we could abort the :substitution when the
@@ -139,7 +140,7 @@ echomsg '****' a:range . s:substitution
 	" number recorded and jump back to the line with the last substitution.
 	" Because of this, the "N substitutions on M lines" will also be wrong.
 	" We have to suppress the original message and emulate that, too.
-	silent execute a:range . s:substitution . 'e'
+	silent execute l:substitutionCommand
 	execute 'normal!' s:lastReplacementLnum . 'G^'
 
 	let l:replacementLines = len(s:lastReplacementLines)
@@ -150,7 +151,7 @@ echomsg '****' a:range . s:substitution
 	    \)
 	endif
     else
-	execute a:range . s:substitution . 'e'
+	execute l:substitutionCommand
     endif
 endfunction
 function! ChangeGlobally#Substitute()
@@ -192,6 +193,7 @@ function! ChangeGlobally#Substitute()
     undo " the deletion of l:changedText
 
 
+    let l:locationRestriction = ''
     if s:range ==# 'line'
 	" Check whether more than one substitution can be made in the line to
 	" determine whether the substitution should be applied to the line or
@@ -209,12 +211,10 @@ function! ChangeGlobally#Substitute()
 	    let l:beyondLineRange = "'[,$"
 	else
 	    " Otherwise, apply it globally.
-	    let l:locationRestriction = ''
 	    let l:beyondLineRange = '%'
 	endif
 
-	let s:substitution = printf('substitute/\V%s%s/%s/g',
-	\   l:locationRestriction,
+	let s:substitution = printf('%s/%s/g',
 	\   l:search,
 	\   l:replace
 	\)
@@ -228,7 +228,7 @@ function! ChangeGlobally#Substitute()
 	" entire lines are substituted. Were we to alternatively append a \r to
 	" the replacement, the next line would be involved and the cursor
 	" misplaced.
-	let s:substitution = printf('substitute/\V\^%s\$/%s/',
+	let s:substitution = printf('\^%s\$/%s/',
 	\   substitute(l:search, '\\n$', '', ''),
 	\   l:replace
 	\)
@@ -239,7 +239,9 @@ function! ChangeGlobally#Substitute()
     endif
 
 
-    call s:Substitute(l:range)
+    " Note: The location restriction must not apply to repeats, so it's not
+    " included in s:substitution.
+    call s:Substitute(l:range, l:locationRestriction . s:substitution)
 
 
     " Do not store the [count] here; it is invalid / empty due to the autocmd
@@ -262,7 +264,7 @@ function! ChangeGlobally#Repeat( isVisualMode )
     endif
 
     try
-	call s:Substitute(l:range)
+	call s:Substitute(l:range, s:substitution)
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away.
