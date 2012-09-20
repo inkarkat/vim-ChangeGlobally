@@ -216,8 +216,8 @@ function! ChangeGlobally#Substitute()
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
 	    " times starting from the original change, not before it.
-	    let l:locationRestriction = printf('\%%(\%%%dv\|\%%>%dv\|\%%>%dl\)', l:changeStartVirtCol, l:changeStartVirtCol, line("'["))
-	    let s:locationRestriction = printf('\%%(\%%%dv\|\%%>%dv\)', l:changeStartVirtCol, l:changeStartVirtCol)
+	    let l:locationRestriction = printf('\%%(\%%>%dv\|\%%>%dl\)', l:changeStartVirtCol - 1, line("'["))
+	    let s:locationRestriction = printf('\%%>%dv', l:changeStartVirtCol - 1)
 	    let l:beyondLineRange = "'[,$"
 	else
 	    " Otherwise, apply it globally.
