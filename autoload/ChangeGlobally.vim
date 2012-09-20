@@ -155,7 +155,7 @@ echomsg '****' l:substitutionCommand
     endif
 endfunction
 function! ChangeGlobally#Substitute()
-    let l:changeStartCol = col("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
+    let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
     " XXX: :startinsert does not clear register . when insertion is aborted
     " immediately (in Vim 7.3). So compare with the captured previous contents,
@@ -194,6 +194,7 @@ function! ChangeGlobally#Substitute()
 
 
     let l:locationRestriction = ''
+    let s:locationRestriction = ''
     if s:range ==# 'line'
 	" Check whether more than one substitution can be made in the line to
 	" determine whether the substitution should be applied to the line or
@@ -207,7 +208,8 @@ function! ChangeGlobally#Substitute()
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
 	    " times starting from the original change, not before it.
-	    let l:locationRestriction = printf('\%%(\%%%dc\|\%%>%dc\|\%%>%dl\)', l:changeStartCol, l:changeStartCol, line("'["))
+	    let l:locationRestriction = printf('\%%(\%%%dv\|\%%>%dv\|\%%>%dl\)', l:changeStartVirtCol, l:changeStartVirtCol, line("'["))
+	    let s:locationRestriction = printf('\%%(\%%%dv\|\%%>%dv\)', l:changeStartVirtCol, l:changeStartVirtCol)
 	    let l:beyondLineRange = "'[,$"
 	else
 	    " Otherwise, apply it globally.
@@ -239,8 +241,8 @@ function! ChangeGlobally#Substitute()
     endif
 
 
-    " Note: The location restriction must not apply to repeats, so it's not
-    " included in s:substitution.
+    " Note: Only part of the location restriction (without the line restriction)
+    " applies to repeats, so it's not included in s:substitution.
     call s:Substitute(l:range, l:locationRestriction . s:substitution)
 
 
@@ -264,7 +266,7 @@ function! ChangeGlobally#Repeat( isVisualMode )
     endif
 
     try
-	call s:Substitute(l:range, s:substitution)
+	call s:Substitute(l:range, s:locationRestriction . s:substitution)
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away.
