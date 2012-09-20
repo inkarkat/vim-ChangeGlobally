@@ -17,6 +17,14 @@
 "				re-applied in the same line, perform the
 "				substitution globally or [count] times in the
 "				text following the change.
+"				ENH: Limit too large [count] on repeat to the
+"				end of the buffer instead of displaying an "E16:
+"				invalid range" error. This allows using a large
+"				count to re-apply the command to the rest of the
+"				buffer.
+"				Silence :undo messages, because together with
+"				the :substitution messages they lead to
+"				hit-enter prompts.
 "	002	01-Sep-2012	Switch from CompleteHelper#ExtractText() to
 "				ingointegration#GetText().
 "	001	28-Aug-2012	file creation
@@ -130,7 +138,7 @@ function! ChangeGlobally#CountedReplace( count )
 endfunction
 function! s:Substitute( range, substitutionArguments )
     let l:substitutionCommand = a:range . 'substitute/\V' . a:substitutionArguments . 'e'
-echomsg '****' l:substitutionCommand
+"****D echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
 	" It would be nice if we could abort the :substitution when the
@@ -188,9 +196,9 @@ function! ChangeGlobally#Substitute()
     " s:newText; without the undo, we would need to avoid re-applying the
     " substitution over the just changed part of the line.
     if ! l:hasAbortedInsert
-	undo " the insertion of s:newText
+	silent undo " the insertion of s:newText
     endif
-    undo " the deletion of l:changedText
+    silent undo " the deletion of l:changedText
 
 
     let l:locationRestriction = ''
@@ -266,7 +274,16 @@ function! ChangeGlobally#Repeat( isVisualMode )
     endif
 
     try
-	call s:Substitute(l:range, s:locationRestriction . s:substitution)
+	if s:count && s:range ==# 'line'
+	    " When we this is substitution inside a line, and the number of
+	    " matches is restricted, we need to apply the substitution to each
+	    " line separately in order to reset s:lastReplaceCnt. Otherwise, the
+	    " substitution count would peter out on the first line already, and
+	    " any repeat count would be without effect.
+	    execute l:range 'call s:Substitute(".", s:locationRestriction . s:substitution)'
+	else
+	    call s:Substitute(l:range, s:locationRestriction . s:substitution)
+	endif
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away.
