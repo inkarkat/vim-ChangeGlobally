@@ -9,12 +9,23 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	003	21-Sep-2012	ENH: Use [count] before the operator and in
+"				visual mode to specify the number of
+"				substitutions that should be made.
+"				Add ChangeGlobally#SetCount() to record it.
+"				ENH: When a characterwise change cannot be
+"				re-applied in the same line, perform the
+"				substitution globally or [count] times in the
+"				text following the change.
 "	002	01-Sep-2012	Switch from CompleteHelper#ExtractText() to
 "				ingointegration#GetText().
 "	001	28-Aug-2012	file creation
 let s:save_cpo = &cpo
 set cpo&vim
 
+function! ChangeGlobally#SetCount( count )
+    let s:count = a:count
+endfunction
 function! ChangeGlobally#SetRegister()
     let s:register = v:register
 endfunction
@@ -102,7 +113,13 @@ function! s:GetInsertion( range )
     let l:endPos = [line("']"), (col("']") - 1)]
     return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
+function! ChangeGlobally#CountedReplace( count, text, replacement )
+    let s:replaceCnt += 1
+    return (s:replaceCnt <= a:count ? a:replacement : a:text)
+endfunction
 function! ChangeGlobally#Substitute()
+    let l:changeStartCol = col("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
+
     " XXX: :startinsert does not clear register . when insertion is aborted
     " immediately (in Vim 7.3). So compare with the captured previous contents,
     " too.
@@ -113,7 +130,16 @@ function! ChangeGlobally#Substitute()
 "****Dechomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
-    let l:replace = substitute(escape(l:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
+    if s:count
+	" Only apply the substitution [count] times. We do this via a
+	" replace-expression that counts the number of replacements; unlike a
+	" repeated single substitution, this avoids the issue of re-replacing.
+	let s:replaceCnt = 0
+	let l:replace = printf('\=ChangeGlobally#CountedReplace(%d, submatch(0), %s)', s:count, string(l:newText))
+    else
+	let l:replace = substitute(escape(l:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
+    endif
+
 
     " To turn the change and following substitutions into a single change, first
     " undo the deletion and insertion. (I couldn't get them combined with
@@ -126,14 +152,39 @@ function! ChangeGlobally#Substitute()
     endif
     undo " the deletion of l:changedText
 
+
     if s:range ==# 'line'
-	let s:substitution = printf('substitute/\V%s/%s/g',
+	" Check whether more than one substitution can be made in the line to
+	" determine whether the substitution should be applied to the line or
+	" beyond.
+	redir => l:substitutionCounting
+	    silent! execute printf("'[,']".'substitute/\V%s/&/gn', l:search)
+	redir END
+	let l:substitutionCnt = str2nr(matchstr(l:substitutionCounting, '\d\+'))
+	let l:isBeyondLineSubstitution = (l:substitutionCnt == 1)
+
+	if s:count
+	    " When a [count] was given, only apply the substitution [count]
+	    " times starting from the original change, not before it.
+	    let l:locationRestriction = printf('\%%(\%%%dc\|\%%>%dc\|\%%>%dl\)', l:changeStartCol, l:changeStartCol, line("'["))
+	    let l:beyondLineRange = "'[,$"
+	else
+	    " Otherwise, apply it globally.
+	    let l:locationRestriction = ''
+	    let l:beyondLineRange = '%'
+	endif
+
+	let s:substitution = printf('substitute/\V%s%s/%s/g',
+	\   l:locationRestriction,
 	\   l:search,
 	\   l:replace
 	\)
 
-	" The line may have been split into multiple lines by the editing.
-	execute "'[,']" . s:substitution . 'e'
+	" Note: The line may have been split into multiple lines by the editing;
+	" use '[, '] instead of the . range.
+	let l:range = (l:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
+"****D echomsg '****' l:range . s:substitution
+	execute l:range . s:substitution . 'e'
     elseif s:range ==# 'buffer'
 	" We need to remove the trailing newline in the search pattern and
 	" anchor the search to the beginning and end of a line, so that only
@@ -145,7 +196,7 @@ function! ChangeGlobally#Substitute()
 	\   l:replace
 	\)
 
-	execute "%" . s:substitution . 'e'
+	execute (s:count ? '.,$' : '%') . s:substitution . 'e'
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif
