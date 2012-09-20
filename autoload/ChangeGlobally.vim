@@ -25,6 +25,9 @@
 "				Silence :undo messages, because together with
 "				the :substitution messages they lead to
 "				hit-enter prompts.
+"				ENH: When the changed text is surrounded by
+"				keyword boundaries, make the substitution for
+"				s/\<changedText\>/ to avoid false matches.
 "	002	01-Sep-2012	Switch from CompleteHelper#ExtractText() to
 "				ingointegration#GetText().
 "	001	28-Aug-2012	file creation
@@ -121,6 +124,18 @@ function! s:GetInsertion( range )
     let l:endPos = [line("']"), (col("']") - 1)]
     return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
+function! s:CountMatches( pattern )
+    redir => l:substitutionCounting
+	silent! execute printf('substitute/\V%s/&/gn', a:pattern)
+    redir END
+    return str2nr(matchstr(l:substitutionCounting, '\d\+'))
+endfunction
+function! s:IsKeywordMatch( text, changeStartVirtCol )
+    return search(
+    \   printf('\V\%%%dv\<%s\>', a:changeStartVirtCol, escape(a:text, '\')),
+    \	'cnW', line('.')
+    \)
+endfunction
 function! s:LastReplaceInit()
     let s:lastReplaceCnt = 0
     let s:lastReplacementLnum = line('.')
@@ -138,7 +153,7 @@ function! ChangeGlobally#CountedReplace( count )
 endfunction
 function! s:Substitute( range, substitutionArguments )
     let l:substitutionCommand = a:range . 'substitute/\V' . a:substitutionArguments . 'e'
-"****D echomsg '****' l:substitutionCommand
+echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
 	" It would be nice if we could abort the :substitution when the
@@ -204,14 +219,17 @@ function! ChangeGlobally#Substitute()
     let l:locationRestriction = ''
     let s:locationRestriction = ''
     if s:range ==# 'line'
+	if s:IsKeywordMatch(l:changedText, l:changeStartVirtCol)
+	    " When the changed text is surrounded by keyword boundaries, only
+	    " perform keyword replacements to avoid replacing other matches
+	    " inside keywords (e.g. "in" inside "ring").
+	    let l:search = '\<' . l:search . '\>'
+	endif
+
 	" Check whether more than one substitution can be made in the line to
 	" determine whether the substitution should be applied to the line or
 	" beyond.
-	redir => l:substitutionCounting
-	    silent! execute printf("'[,']".'substitute/\V%s/&/gn', l:search)
-	redir END
-	let l:substitutionCnt = str2nr(matchstr(l:substitutionCounting, '\d\+'))
-	let l:isBeyondLineSubstitution = (l:substitutionCnt == 1)
+	let l:isBeyondLineSubstitution = (s:CountMatches(l:search) == 1)
 
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
