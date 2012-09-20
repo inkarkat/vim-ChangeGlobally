@@ -113,14 +113,44 @@ function! s:GetInsertion( range )
     let l:endPos = [line("']"), (col("']") - 1)]
     return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
-function! ChangeGlobally#CountedReplace( count, text, replacement )
-    if s:replaceCnt < a:count
-	let s:replaceCnt += 1
+function! s:LastReplaceInit()
+    let s:lastReplaceCnt = 0
+    let s:lastReplacementLnum = line('.')
+    let s:lastReplacementLines = {}
+endfunction
+function! ChangeGlobally#CountedReplace( count )
+    if s:lastReplaceCnt < a:count
+	let s:lastReplaceCnt += 1
 	let s:lastReplacementLnum = line('.')
 	let s:lastReplacementLines[line('.')] = 1
-	return a:replacement
+	return s:newText
     else
-	return a:text
+	return submatch(0)
+    endif
+endfunction
+function! s:Substitute( range )
+echomsg '****' a:range . s:substitution
+    call s:LastReplaceInit()
+    if s:count
+	" It would be nice if we could abort the :substitution when the
+	" s:lastReplaceCnt has been reached. Unfortunately, throwing an
+	" exception from ChangeGlobally#CountedReplace() will still substitute
+	" with an empty string, so we cannot use that. Instead, we have the line
+	" number recorded and jump back to the line with the last substitution.
+	" Because of this, the "N substitutions on M lines" will also be wrong.
+	" We have to suppress the original message and emulate that, too.
+	silent execute a:range . s:substitution . 'e'
+	execute 'normal!' s:lastReplacementLnum . 'G^'
+
+	let l:replacementLines = len(s:lastReplacementLines)
+	if l:replacementLines >= &report
+	    echomsg printf('%d substitution%s on %d line%s',
+	    \   s:lastReplaceCnt, (s:lastReplaceCnt == 1 ? '' : 's'),
+	    \   l:replacementLines, (l:replacementLines == 1 ? '' : 's')
+	    \)
+	endif
+    else
+	execute a:range . s:substitution . 'e'
     endif
 endfunction
 function! ChangeGlobally#Substitute()
@@ -132,20 +162,21 @@ function! ChangeGlobally#Substitute()
     let l:hasAbortedInsert = getpos("'[") == getpos("']") && (empty(@.) || @. ==# s:previousInsertedText)
 "****D echomsg '****' string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert
     let l:changedText = getreg(s:register)
-    let l:newText = s:GetInsertion(s:range)
-"****Dechomsg '**** subst' string(l:changedText) string(@.) string(l:newText)
+    let s:newText = s:GetInsertion(s:range)
+"****Dechomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
     if s:count
 	" Only apply the substitution [count] times. We do this via a
 	" replace-expression that counts the number of replacements; unlike a
 	" repeated single substitution, this avoids the issue of re-replacing.
-	let s:replaceCnt = 0
-	let s:lastReplacementLnum = line('.')
-	let s:lastReplacementLines = {}
-	let l:replace = printf('\=ChangeGlobally#CountedReplace(%d, submatch(0), %s)', s:count, string(l:newText))
+	" Note: We cannot simply pass in the replacement via string(s:newText);
+	" it may contain the / substitution separator, which must not appear at
+	" all in the expression. Therefore, we store this in a variable and
+	" directly reference it from ChangeGlobally#CountedReplace().
+	let l:replace = printf('\=ChangeGlobally#CountedReplace(%d)', s:count)
     else
-	let l:replace = substitute(escape(l:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
+	let l:replace = substitute(escape(s:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
     endif
 
 
@@ -153,10 +184,10 @@ function! ChangeGlobally#Substitute()
     " undo the deletion and insertion. (I couldn't get them combined with
     " :undojoin across the :startinsert.)
     " This also solves the special case when l:changedText is contained in
-    " l:newText; without the undo, we would need to avoid re-applying the
+    " s:newText; without the undo, we would need to avoid re-applying the
     " substitution over the just changed part of the line.
     if ! l:hasAbortedInsert
-	undo " the insertion of l:newText
+	undo " the insertion of s:newText
     endif
     undo " the deletion of l:changedText
 
@@ -207,28 +238,8 @@ function! ChangeGlobally#Substitute()
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif
 
-"****D echomsg '****' l:range . s:substitution
-    if s:count
-	" It would be nice if we could abort the :substitution when the
-	" s:replaceCnt has been reached. Unfortunately, throwing an exception
-	" from ChangeGlobally#CountedReplace() will still substitute with an
-	" empty string, so we cannot use that. Instead, we have the line number
-	" recorded and jump back to the line with the last substitution.
-	" Because of this, the "N substitutions on M lines" will also be wrong.
-	" We have to suppress the original message and emulate that, too.
-	silent execute l:range . s:substitution . 'e'
-	execute 'normal!' s:lastReplacementLnum . 'G^'
 
-	let l:replacementLines = len(s:lastReplacementLines)
-	if l:replacementLines >= &report
-	    echomsg printf('%d substitution%s on %d line%s',
-	    \   s:replaceCnt, (s:replaceCnt == 1 ? '' : 's'),
-	    \   l:replacementLines, (l:replacementLines == 1 ? '' : 's')
-	    \)
-	endif
-    else
-	execute l:range . s:substitution . 'e'
-    endif
+    call s:Substitute(l:range)
 
 
     " Do not store the [count] here; it is invalid / empty due to the autocmd
@@ -248,7 +259,7 @@ function! ChangeGlobally#Repeat( isVisualMode )
     endif
 
     try
-	execute l:range . s:substitution
+	call s:Substitute(l:range)
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
 	" exception source info prepended, which we cut away.
