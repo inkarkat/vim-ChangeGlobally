@@ -254,8 +254,11 @@ function! ChangeGlobally#Repeat( isVisualMode )
     " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
 	let l:range = "'<,'>"
+    elseif v:count1 > 1
+	" Avoid "E16: invalid range" when a too large [count] was given.
+	let l:range = (line('.') + v:count - 1 < line('$') ? '.,.+'.(v:count1 - 1) : '.,$')
     else
-	let l:range = (v:count1 > 1 ? '.,.+'.(v:count1 - 1) : (s:range ==# 'line' ? '' : '%'))
+	let l:range = (s:range ==# 'line' ? '' : '%')
     endif
 
     try
