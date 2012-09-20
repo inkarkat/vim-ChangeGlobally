@@ -52,13 +52,16 @@ vnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 " A normal-mode repeat of the visual mapping is triggered by repeat.vim. It
 " establishes a new selection at the cursor position, of the same mode and size
 " as the last selection.
-"   If [count] is given, the size is multiplied accordingly. This has the side
-"   effect that a repeat with [count] will persist the expanded size, which is
-"   different from what the normal-mode repeat does (it keeps the scope of the
-"   original command).
+" Note: The cursor is placed back at the beginning of the selection (via "o"),
+" so in case the repeat substitutions fails, the cursor will stay at the current
+" position instead of moving to the end of the selection.
+" If [count] is given, the size is multiplied accordingly. This has the side
+" effect that a repeat with [count] will persist the expanded size, which is
+" different from what the normal-mode repeat does (it keeps the scope of the
+" original command).
 nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\execute 'normal!' v:count1 . 'v' . (visualmode() !=# 'V' && &selection ==# 'exclusive' ? ' ' : ''). "\<lt>Esc>"<Bar>
+\execute 'normal!' v:count1 . 'v' . (visualmode() !=# 'V' && &selection ==# 'exclusive' ? ' ' : ''). "o\<lt>Esc>"<Bar>
 \call ChangeGlobally#Repeat(1)<CR>
 
 let &cpo = s:save_cpo
