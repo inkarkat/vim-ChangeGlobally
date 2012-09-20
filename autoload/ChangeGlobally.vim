@@ -28,6 +28,8 @@
 "				ENH: When the changed text is surrounded by
 "				keyword boundaries, make the substitution for
 "				s/\<changedText\>/ to avoid false matches.
+"				Always perform a case-sensitive match (/\C/),
+"				regardless of 'ignorecase'.
 "	002	01-Sep-2012	Switch from CompleteHelper#ExtractText() to
 "				ingointegration#GetText().
 "	001	28-Aug-2012	file creation
@@ -126,13 +128,13 @@ function! s:GetInsertion( range )
 endfunction
 function! s:CountMatches( pattern )
     redir => l:substitutionCounting
-	silent! execute printf('substitute/\V%s/&/gn', a:pattern)
+	silent! execute printf('substitute/\C\V%s/&/gn', a:pattern)
     redir END
     return str2nr(matchstr(l:substitutionCounting, '\d\+'))
 endfunction
 function! s:IsKeywordMatch( text, changeStartVirtCol )
     return search(
-    \   printf('\V\%%%dv\<%s\>', a:changeStartVirtCol, escape(a:text, '\')),
+    \   printf('\C\V\%%%dv\<%s\>', a:changeStartVirtCol, escape(a:text, '\')),
     \	'cnW', line('.')
     \)
 endfunction
@@ -152,7 +154,7 @@ function! ChangeGlobally#CountedReplace( count )
     endif
 endfunction
 function! s:Substitute( range, substitutionArguments )
-    let l:substitutionCommand = a:range . 'substitute/\V' . a:substitutionArguments . 'e'
+    let l:substitutionCommand = a:range . 'substitute/\C\V' . a:substitutionArguments . 'e'
 echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
