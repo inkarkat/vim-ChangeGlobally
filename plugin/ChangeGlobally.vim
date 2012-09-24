@@ -8,6 +8,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.00.003	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
+"				configuration.
 "	002	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
@@ -21,6 +23,15 @@ endif
 let g:loaded_ChangeGlobally = 1
 let s:save_cpo = &cpo
 set cpo&vim
+
+"- configuration ---------------------------------------------------------------
+
+if ! exists('g:ChangeGlobally_GlobalCountThreshold')
+    let g:ChangeGlobally_GlobalCountThreshold = 999
+endif
+
+
+"- mappings --------------------------------------------------------------------
 
 nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
 nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetCount(v:count)<CR><SID>(ChangeGloballyOperator)
