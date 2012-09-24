@@ -30,6 +30,8 @@
 "				s/\<changedText\>/ to avoid false matches.
 "				Always perform a case-sensitive match (/\C/),
 "				regardless of 'ignorecase'.
+"				ENH: Beep when no additional substitutions have
+"				been made.
 "	002	01-Sep-2012	Switch from CompleteHelper#ExtractText() to
 "				ingointegration#GetText().
 "	001	28-Aug-2012	file creation
@@ -144,7 +146,7 @@ function! s:LastReplaceInit()
     let s:lastReplacementLines = {}
 endfunction
 function! ChangeGlobally#CountedReplace( count )
-    if s:lastReplaceCnt < a:count
+    if ! a:count || s:lastReplaceCnt < a:count
 	let s:lastReplaceCnt += 1
 	let s:lastReplacementLnum = line('.')
 	let s:lastReplacementLines[line('.')] = 1
@@ -153,9 +155,17 @@ function! ChangeGlobally#CountedReplace( count )
 	return submatch(0)
     endif
 endfunction
+function! s:Report( replaceCnt, replacementLines )
+    if a:replacementLines >= &report
+	echomsg printf('%d substitution%s on %d line%s',
+	\   a:replaceCnt, (a:replaceCnt == 1 ? '' : 's'),
+	\   a:replacementLines, (a:replacementLines == 1 ? '' : 's')
+	\)
+    endif
+endfunction
 function! s:Substitute( range, substitutionArguments )
     let l:substitutionCommand = a:range . 'substitute/\C\V' . a:substitutionArguments . 'e'
-echomsg '****' l:substitutionCommand
+"****D echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
 	" It would be nice if we could abort the :substitution when the
@@ -166,18 +176,14 @@ echomsg '****' l:substitutionCommand
 	" Because of this, the "N substitutions on M lines" will also be wrong.
 	" We have to suppress the original message and emulate that, too.
 	silent execute l:substitutionCommand
-	execute 'normal!' s:lastReplacementLnum . 'G^'
+	execute 'keepjumps normal!' s:lastReplacementLnum . 'G^'
 
-	let l:replacementLines = len(s:lastReplacementLines)
-	if l:replacementLines >= &report
-	    echomsg printf('%d substitution%s on %d line%s',
-	    \   s:lastReplaceCnt, (s:lastReplaceCnt == 1 ? '' : 's'),
-	    \   l:replacementLines, (l:replacementLines == 1 ? '' : 's')
-	    \)
-	endif
+	call s:Report(s:lastReplaceCnt, len(s:lastReplacementLines))
     else
 	execute l:substitutionCommand
     endif
+
+    return s:lastReplaceCnt
 endfunction
 function! ChangeGlobally#Substitute()
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
@@ -192,18 +198,18 @@ function! ChangeGlobally#Substitute()
 "****Dechomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
-    if s:count
-	" Only apply the substitution [count] times. We do this via a
-	" replace-expression that counts the number of replacements; unlike a
-	" repeated single substitution, this avoids the issue of re-replacing.
-	" Note: We cannot simply pass in the replacement via string(s:newText);
-	" it may contain the / substitution separator, which must not appear at
-	" all in the expression. Therefore, we store this in a variable and
-	" directly reference it from ChangeGlobally#CountedReplace().
-	let l:replace = printf('\=ChangeGlobally#CountedReplace(%d)', s:count)
-    else
-	let l:replace = substitute(escape(s:newText, '/\'.(&magic ? '&~' : '')), '\n', "\r", 'g')
-    endif
+
+    " Only apply the substitution [count] times. We do this via a
+    " replace-expression that counts the number of replacements; unlike a
+    " repeated single substitution, this avoids the issue of re-replacing.
+    " We also do this for the global (line / buffer) substitution without a
+    " [count] in order to determine whether there actually were other matches.
+    " If not, we indicate this with a beep.
+    " Note: We cannot simply pass in the replacement via string(s:newText); it
+    " may contain the / substitution separator, which must not appear at all in
+    " the expression. Therefore, we store this in a variable and directly
+    " reference it from ChangeGlobally#CountedReplace().
+    let l:replace = printf('\=ChangeGlobally#CountedReplace(%d)', s:count)
 
 
     " To turn the change and following substitutions into a single change, first
@@ -271,7 +277,9 @@ function! ChangeGlobally#Substitute()
 
     " Note: Only part of the location restriction (without the line restriction)
     " applies to repeats, so it's not included in s:substitution.
-    call s:Substitute(l:range, l:locationRestriction . s:substitution)
+    if s:Substitute(l:range, l:locationRestriction . s:substitution) <= 1
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+    endif
 
 
     " Do not store the [count] here; it is invalid / empty due to the autocmd
@@ -281,6 +289,11 @@ function! ChangeGlobally#Substitute()
     silent! call visualrepeat#set("\<Plug>(ChangeGloballyVisualRepeat)", '')
 endfunction
 
+function! s:IndividualSubstitute( substitutionArguments )
+    let l:count = s:Substitute('.', a:substitutionArguments)
+    let s:individualReplace.count += l:count
+    let s:individualReplace.lines += (l:count ? 1 : 0)
+endfunction
 function! ChangeGlobally#Repeat( isVisualMode )
     " Re-apply the previous substitution (without new insert mode) to the visual
     " selection, [count] next lines, or the range of the previous substitution.
@@ -300,9 +313,17 @@ function! ChangeGlobally#Repeat( isVisualMode )
 	    " line separately in order to reset s:lastReplaceCnt. Otherwise, the
 	    " substitution count would peter out on the first line already, and
 	    " any repeat count would be without effect.
-	    execute l:range 'call s:Substitute(".", s:locationRestriction . s:substitution)'
+	    let s:individualReplace = {'count': 0, 'lines': 0}
+		" Note: Use :silent to avoid the intermediate reporting.
+		silent execute l:range 'call s:IndividualSubstitute(s:locationRestriction . s:substitution)'
+
+		" And do the reporting on the accummulated statistics later.
+		call s:Report(s:individualReplace.count, s:individualReplace.lines)
+	    unlet s:individualReplace
 	else
-	    call s:Substitute(l:range, s:locationRestriction . s:substitution)
+	    if s:Substitute(l:range, s:locationRestriction . s:substitution) == 0
+		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	    endif
 	endif
     catch /^Vim\%((\a\+)\)\=:E/
 	" v:exception contains what is normally in v:errmsg, but with extra
