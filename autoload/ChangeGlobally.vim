@@ -20,6 +20,12 @@
 "				custom visual-mode * mapping and it can be used
 "				to turn off the keyword substitution when it is
 "				not desired.
+"				Inject the [visual]repeat mappings from the
+"				original mappings (via
+"				ChangeGlobally#SetParameters()) instead of
+"				hard-coding them in the functions, so that
+"				the functions can be re-used for similar
+"				(SmartCase) substitutions.
 "	003	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
@@ -49,9 +55,9 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! ChangeGlobally#SetParameters( count, isVisualMode )
+function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visualrepeatMapping )
     let s:register = v:register
-    let s:isVisualMode = a:isVisualMode
+    let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
     if a:count >= g:ChangeGlobally_GlobalCountThreshold
 	" When a very large [count] is given, turn a line-scoped substitution
@@ -301,8 +307,8 @@ function! ChangeGlobally#Substitute()
     " Do not store the [count] here; it is invalid / empty due to the autocmd
     " invocation here, anyway. But allow specifying a custom [count] on
     " repetition (which would be disallowed by passing -1).
-    silent! call       repeat#set("\<Plug>(ChangeGloballyRepeat)", '')
-    silent! call visualrepeat#set("\<Plug>(ChangeGloballyVisualRepeat)", '')
+    silent! call       repeat#set(s:repeatMapping)
+    silent! call visualrepeat#set(s:visualrepeatMapping)
 endfunction
 
 function! s:IndividualSubstitute( substitutionArguments )
@@ -310,7 +316,7 @@ function! s:IndividualSubstitute( substitutionArguments )
     let s:individualReplace.count += l:count
     let s:individualReplace.lines += (l:count ? 1 : 0)
 endfunction
-function! ChangeGlobally#Repeat( isVisualMode )
+function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMapping )
     " Re-apply the previous substitution (without new insert mode) to the visual
     " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
@@ -352,8 +358,8 @@ function! ChangeGlobally#Repeat( isVisualMode )
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
     endtry
 
-    silent! call       repeat#set(a:isVisualMode ? "\<Plug>(ChangeGloballyVisualRepeat)" : "\<Plug>(ChangeGloballyRepeat)")
-    silent! call visualrepeat#set("\<Plug>(ChangeGloballyVisualRepeat)")
+    silent! call       repeat#set(a:repeatMapping)
+    silent! call visualrepeat#set(a:visualrepeatMapping)
 endfunction
 
 let &cpo = s:save_cpo
