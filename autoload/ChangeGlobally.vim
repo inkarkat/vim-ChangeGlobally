@@ -11,10 +11,19 @@
 " REVISION	DATE		REMARKS
 "   1.00.004	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
 "				configuration.
+"				Merge ChangeGlobally#SetCount() and
+"				ChangeGlobally#SetRegister() into
+"				ChangeGlobally#SetParameters() and pass in
+"				visual mode flag.
+"				CHG: Do not check for keyword boundaries for the
+"				visual mode mapping; this is consistent with my
+"				custom visual-mode * mapping and it can be used
+"				to turn off the keyword substitution when it is
+"				not desired.
 "	003	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
-"				Add ChangeGlobally#SetCount() to record it.
+"				Add ChangeGlobally#SetParameters() to record it.
 "				ENH: When a characterwise change cannot be
 "				re-applied in the same line, perform the
 "				substitution globally or [count] times in the
@@ -40,7 +49,10 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! ChangeGlobally#SetCount( count )
+function! ChangeGlobally#SetParameters( count, isVisualMode )
+    let s:register = v:register
+    let s:isVisualMode = a:isVisualMode
+
     if a:count >= g:ChangeGlobally_GlobalCountThreshold
 	" When a very large [count] is given, turn a line-scoped substitution
 	" into a global, buffer-scoped one.
@@ -48,9 +60,6 @@ function! ChangeGlobally#SetCount( count )
     else
 	let [s:count, s:isForceGlobal] = [a:count, 0]
     endif
-endfunction
-function! ChangeGlobally#SetRegister()
-    let s:register = v:register
 endfunction
 function! s:ArmInsertMode()
     augroup ChangeGlobally
@@ -103,7 +112,6 @@ function! ChangeGlobally#Operator( type )
     call s:ArmInsertMode()
 endfunction
 function! ChangeGlobally#OperatorExpression()
-    call ChangeGlobally#SetRegister()
     set opfunc=ChangeGlobally#Operator
 
     let l:keys = 'g@'
@@ -235,7 +243,7 @@ function! ChangeGlobally#Substitute()
     let l:locationRestriction = ''
     let s:locationRestriction = ''
     if s:range ==# 'line'
-	if s:IsKeywordMatch(l:changedText, l:changeStartVirtCol)
+	if ! s:isVisualMode && s:IsKeywordMatch(l:changedText, l:changeStartVirtCol)
 	    " When the changed text is surrounded by keyword boundaries, only
 	    " perform keyword replacements to avoid replacing other matches
 	    " inside keywords (e.g. "in" inside "ring").
