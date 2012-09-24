@@ -26,6 +26,9 @@
 "				hard-coding them in the functions, so that
 "				the functions can be re-used for similar
 "				(SmartCase) substitutions.
+"				Allow manipulation of the substitution arguments
+"				via s:SubstitutionHook to facilitate easy reuse,
+"				especially for a similar SmartCase substitution.
 "	003	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
@@ -55,7 +58,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visualrepeatMapping )
+function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
@@ -65,6 +68,12 @@ function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visu
 	let [s:count, s:isForceGlobal] = [0, 1]
     else
 	let [s:count, s:isForceGlobal] = [a:count, 0]
+    endif
+
+    if a:0
+	let s:SubstitutionHook = a:1
+    else
+	unlet! s:SubstitutionHook
     endif
 endfunction
 function! s:ArmInsertMode()
@@ -296,10 +305,16 @@ function! ChangeGlobally#Substitute()
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif
 
+    if exists('s:SubstitutionHook')
+	" Allow manipulation of the substitution arguments to facilitate easy
+	" reuse, especially for a similar SmartCase substitution.
+	let s:substitution =  call(s:SubstitutionHook, [s:substitution, s:range])
+    endif
+
 
     " Note: Only part of the location restriction (without the line restriction)
     " applies to repeats, so it's not included in s:substitution.
-    if s:Substitute(l:range, l:locationRestriction . s:substitution) <= 1
+    if empty(s:substitution) || s:Substitute(l:range, l:locationRestriction . s:substitution) <= 1
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
     endif
 
