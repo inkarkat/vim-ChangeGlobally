@@ -36,14 +36,33 @@ SEE ALSO								     *
 
 ==============================================================================
 USAGE							*ChangeGlobally-usage*
-									  *gc*
-["x]gc{motion}		Delete {motion} text [into register x] and start
-			insert. After exiting insert mode, the substitution is
-			globally applied.
-									*v_gc*
-{Visual}["x]gc		Delete the highlighted text [into register x] and
-			start insert. After exiting insert mode, the
-			substitution is globally applied.
+								   *gc* *v_gc*
+[N]["x]gc{motion}	Delete {motion} text [into register x] and start
+			inserting.
+{Visual}[N]["x]gc	Delete the highlighted text [into register x] and
+			start inserting.
+			After exiting insert mode, the substitution is
+			applied:
+			- For characterwise motions / selections: Globally to
+			  the changed line if possible, or globally in the
+			  entire buffer when no additional substitution can be
+			  made in the changed line.
+			- For linewise motions / selections: Globally (for
+			  identical complete lines) in the entire buffer.
+			- [N] times (including the just completed change, so
+			  only N > 1 really makes sense), starting from the
+			  position of the changed text.
+			  Note: A possible [count] inside {motion} is
+			  different from [N]; e.g., 2gc3w changes 3 words, and
+			  then applies this change 1 more time.
+
+			The substitution is always done case-sensitive,
+			regardless of the 'ignorecase' setting.
+			When the changed text is surrounded by keyword
+			boundaries (/\<text\>/), only keyword matches are
+			replaced so spurious matches inside keywords (e.g.
+			"IN" inside "rINg") are ignored.
+
 									 *gcc*
 ["x]gcc			Delete [count] lines [into register x] and start
 			insert |linewise|. If 'autoindent' is on, preserve the
@@ -57,6 +76,14 @@ USAGE							*ChangeGlobally-usage*
 			deleted line(s) are replaced with the newly inserted
 			text.
 			The mapping is not available in blockwise visual mode.
+
+			When the command is repeated via |.|, the previous
+			substitution (without entering a new insert mode) is
+			re-applied to the visual selection, [count] next
+			lines, or the range of the previous substitution.
+			For a command that used a limit [N], the number of
+			substitutions and the start column from where they
+			were applied are kept.
 
 EXAMPLE						      *ChangeGlobally-example*
 
@@ -97,9 +124,6 @@ TODO							 *ChangeGlobally-todo*
   the original text.
 
 IDEAS							*ChangeGlobally-ideas*
-
-- When the changed text is a keyword surrounded by keyword boundaries, make
-  the substitution for s/\<changedText\>/ to avoid false matches.
 
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
