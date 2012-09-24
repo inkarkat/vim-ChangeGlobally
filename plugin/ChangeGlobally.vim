@@ -10,6 +10,10 @@
 " REVISION	DATE		REMARKS
 "   1.00.003	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
 "				configuration.
+"				Merge ChangeGlobally#SetCount() and
+"				ChangeGlobally#SetRegister() into
+"				ChangeGlobally#SetParameters() and pass in
+"				visual mode flag.
 "	002	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
@@ -34,14 +38,13 @@ endif
 "- mappings --------------------------------------------------------------------
 
 nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
-nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetCount(v:count)<CR><SID>(ChangeGloballyOperator)
+nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(v:count,0)<CR><SID>(ChangeGloballyOperator)
 if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
     nmap gc <Plug>(ChangeGloballyOperator)
 endif
 nnoremap <silent> <Plug>(ChangeGloballyLine)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#SetCount(0)<Bar>
-\call ChangeGlobally#SetRegister()<Bar>
+\call ChangeGlobally#SetParameters(0,0)<Bar>
 \execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
 \call ChangeGlobally#Operator('V')<CR>
 if ! hasmapto('<Plug>(ChangeGloballyLine)', 'n')
@@ -50,8 +53,7 @@ endif
 
 vnoremap <silent> <Plug>(ChangeGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#SetCount(v:count)<Bar>
-\call ChangeGlobally#SetRegister()<Bar>
+\call ChangeGlobally#SetParameters(v:count,1)<Bar>
 \call ChangeGlobally#Operator(visualmode())<CR>
 if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'v')
     xmap gc <Plug>(ChangeGloballyVisual)
