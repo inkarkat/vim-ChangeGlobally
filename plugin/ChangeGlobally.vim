@@ -8,6 +8,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"	002	21-Sep-2012	ENH: Use [count] before the operator and in
+"				visual mode to specify the number of
+"				substitutions that should be made.
+"				Call ChangeGlobally#SetCount() to record it.
 "	001	28-Aug-2012	file creation
 
 " Avoid installing twice or when in unsupported Vim version.
@@ -18,12 +22,14 @@ let g:loaded_ChangeGlobally = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-nnoremap <silent> <expr> <Plug>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
+nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
+nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetCount(v:count)<CR><SID>(ChangeGloballyOperator)
 if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
     nmap gc <Plug>(ChangeGloballyOperator)
 endif
 nnoremap <silent> <Plug>(ChangeGloballyLine)
 \ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#SetCount(0)<Bar>
 \call ChangeGlobally#SetRegister()<Bar>
 \execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
 \call ChangeGlobally#Operator('V')<CR>
@@ -33,6 +39,7 @@ endif
 
 vnoremap <silent> <Plug>(ChangeGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#SetCount(v:count)<Bar>
 \call ChangeGlobally#SetRegister()<Bar>
 \call ChangeGlobally#Operator(visualmode())<CR>
 if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'v')
