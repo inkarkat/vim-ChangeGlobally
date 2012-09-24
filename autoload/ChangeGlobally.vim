@@ -9,6 +9,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.00.004	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
+"				configuration.
 "	003	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
@@ -39,7 +41,13 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! ChangeGlobally#SetCount( count )
-    let s:count = a:count
+    if a:count >= g:ChangeGlobally_GlobalCountThreshold
+	" When a very large [count] is given, turn a line-scoped substitution
+	" into a global, buffer-scoped one.
+	let [s:count, s:isForceGlobal] = [0, 1]
+    else
+	let [s:count, s:isForceGlobal] = [a:count, 0]
+    endif
 endfunction
 function! ChangeGlobally#SetRegister()
     let s:register = v:register
@@ -237,7 +245,7 @@ function! ChangeGlobally#Substitute()
 	" Check whether more than one substitution can be made in the line to
 	" determine whether the substitution should be applied to the line or
 	" beyond.
-	let l:isBeyondLineSubstitution = (s:CountMatches(l:search) == 1)
+	let l:isBeyondLineSubstitution = (s:isForceGlobal || s:CountMatches(l:search) == 1)
 
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
