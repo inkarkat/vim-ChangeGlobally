@@ -14,6 +14,12 @@
 "				ChangeGlobally#SetRegister() into
 "				ChangeGlobally#SetParameters() and pass in
 "				visual mode flag.
+"				Inject the [visual]repeat mappings from the
+"				original mappings (via
+"				ChangeGlobally#SetParameters()) instead of
+"				hard-coding them in the functions, so that
+"				the functions can be re-used for similar
+"				(SmartCase) substitutions.
 "	002	21-Sep-2012	ENH: Use [count] before the operator and in
 "				visual mode to specify the number of
 "				substitutions that should be made.
@@ -38,13 +44,13 @@ endif
 "- mappings --------------------------------------------------------------------
 
 nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
-nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(v:count,0)<CR><SID>(ChangeGloballyOperator)
+nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(v:count, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR><SID>(ChangeGloballyOperator)
 if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
     nmap gc <Plug>(ChangeGloballyOperator)
 endif
 nnoremap <silent> <Plug>(ChangeGloballyLine)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#SetParameters(0,0)<Bar>
+\call ChangeGlobally#SetParameters(0, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
 \call ChangeGlobally#Operator('V')<CR>
 if ! hasmapto('<Plug>(ChangeGloballyLine)', 'n')
@@ -53,7 +59,7 @@ endif
 
 vnoremap <silent> <Plug>(ChangeGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#SetParameters(v:count,1)<Bar>
+\call ChangeGlobally#SetParameters(v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \call ChangeGlobally#Operator(visualmode())<CR>
 if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'v')
     xmap gc <Plug>(ChangeGloballyVisual)
@@ -63,11 +69,11 @@ endif
 
 nnoremap <silent> <Plug>(ChangeGloballyRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#Repeat(0)<CR>
+\call ChangeGlobally#Repeat(0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
 
 vnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#Repeat(1)<CR>
+\call ChangeGlobally#Repeat(1, "\<lt>Plug>(ChangeGloballyVisualRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
 
 " A normal-mode repeat of the visual mapping is triggered by repeat.vim. It
 " establishes a new selection at the cursor position, of the same mode and size
@@ -82,7 +88,7 @@ vnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \execute 'normal!' v:count1 . 'v' . (visualmode() !=# 'V' && &selection ==# 'exclusive' ? ' ' : ''). "o\<lt>Esc>"<Bar>
-\call ChangeGlobally#Repeat(1)<CR>
+\call ChangeGlobally#Repeat(1, "\<lt>Plug>(ChangeGloballyVisualRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
