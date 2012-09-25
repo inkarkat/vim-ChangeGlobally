@@ -161,7 +161,7 @@ function! s:GetInsertion( range )
 endfunction
 function! s:CountMatches( pattern )
     redir => l:substitutionCounting
-	silent! execute printf('substitute/\C\V%s/&/gn', a:pattern)
+	silent! execute printf('substitute/%s/&/gn', a:pattern)
     redir END
     return str2nr(matchstr(l:substitutionCounting, '\d\+'))
 endfunction
@@ -195,7 +195,7 @@ function! s:Report( replaceCnt, replacementLines )
     endif
 endfunction
 function! s:Substitute( range, substitutionArguments )
-    let l:substitutionCommand = a:range . 'substitute/\C\V' . a:substitutionArguments . 'e'
+    let l:substitutionCommand = a:range . 'substitute/' . a:substitutionArguments . 'e'
 "****D echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
@@ -228,7 +228,7 @@ function! ChangeGlobally#Substitute()
     let s:newText = s:GetInsertion(s:range)
 "****Dechomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
-    let l:search = substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
+    let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
 
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
@@ -253,6 +253,16 @@ function! ChangeGlobally#Substitute()
 	silent undo " the insertion of s:newText
     endif
     silent undo " the deletion of l:changedText
+
+
+    if exists('s:SubstitutionHook')
+	" Allow manipulation of the substitution arguments to facilitate easy
+	" reuse, especially for a similar SmartCase substitution. We must do
+	" this here on the search and replace parts (and not on the final
+	" s:substitution), because we need l:search for the s:CountMatches()
+	" check before the actual substitution.
+	let [l:search, l:replace] =  call(s:SubstitutionHook, [l:search, l:replace, s:range])
+    endif
 
 
     let l:locationRestriction = ''
@@ -303,12 +313,6 @@ function! ChangeGlobally#Substitute()
 	let l:range = (s:count ? '.,$' : '%')
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
-    endif
-
-    if exists('s:SubstitutionHook')
-	" Allow manipulation of the substitution arguments to facilitate easy
-	" reuse, especially for a similar SmartCase substitution.
-	let s:substitution =  call(s:SubstitutionHook, [s:substitution, s:range])
     endif
 
 
