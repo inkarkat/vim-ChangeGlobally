@@ -5,6 +5,7 @@
 description			|ChangeGlobally-description|
 usage				|ChangeGlobally-usage|
 installation			|ChangeGlobally-installation|
+configuration			|ChangeGlobally-configuration|
 limitations			|ChangeGlobally-limitations|
 known problems			|ChangeGlobally-known-problems|
 todo				|ChangeGlobally-todo|
@@ -46,7 +47,8 @@ USAGE							*ChangeGlobally-usage*
 			- For characterwise motions / selections: Globally to
 			  the changed line if possible, or globally in the
 			  entire buffer when no additional substitution can be
-			  made in the changed line.
+			  made in the changed line or a very large [N] is
+			  given |g:ChangeGlobally_GlobalCountThreshold|.
 			- For linewise motions / selections: Globally (for
 			  identical complete lines) in the entire buffer.
 			- [N] times (including the just completed change, so
@@ -61,7 +63,8 @@ USAGE							*ChangeGlobally-usage*
 			When the changed text is surrounded by keyword
 			boundaries (/\<text\>/), only keyword matches are
 			replaced so spurious matches inside keywords (e.g.
-			"IN" inside "rINg") are ignored.
+			"IN" inside "rINg") are ignored. This does not apply
+			to visual selections.
 
 									 *gcc*
 ["x]gcc			Delete [count] lines [into register x] and start
@@ -112,6 +115,18 @@ DEPENDENCIES					 *ChangeGlobally-dependencies*
 - Requires Vim 7.0 or higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - visualrepeat.vim (vimscript #3848) plugin (optional)
+
+==============================================================================
+CONFIGURATION					 *ChangeGlobally-configuation*
+
+For a permanent configuration, put the following commands into your |vimrc|:
+
+				       *g:ChangeGlobally_GlobalCountThreshold*
+To apply a characterwise substitution globally in the entire buffer even when
+there are additional substitutions in the current line, a very large [count]
+can be supplied. To change the threshold, use: >
+    let g:ChangeGlobally_GlobalCountThreshold = 999
+To turn off this feature, set the threshold to 0.
 
 ==============================================================================
 LIMITATIONS					  *ChangeGlobally-limitations*
