@@ -1,4 +1,4 @@
-*ChangeGlobally.txt*    Change {motion} text and repeat the substitution on the entire line.
+*ChangeGlobally.txt*    Change {motion} text and repeat the substitution.
 
 		      CHANGE GLOBALLY    by Ingo Karkat
 							  *ChangeGlobally.vim*
@@ -34,6 +34,11 @@ SEE ALSO								     *
 
 - ReplaceWithRegister (vimscript #2703) simplifies another frequent editing
   task: Replace the selection with the contents of register.
+- ChangeGloballySmartCase (vimscript #0000) is an add-on to this plugin that
+  implements a |gC| variant that uses a "smart case" substitution which covers
+  variations in upper-/lowercase ("maxSize" vs. "MaxSize") as well as
+  different coding styles like CamelCase and underscore_notation ("maxSize",
+  "MAX_SIZE").
 
 ==============================================================================
 USAGE							*ChangeGlobally-usage*
@@ -90,12 +95,13 @@ USAGE							*ChangeGlobally-usage*
 
 EXAMPLE						      *ChangeGlobally-example*
 
-Suppose you have a line like this, and you want to change "de" to "en":
-    A[lang=de]:after, SPAN[lang=de]:after { content: url("lang.de.gif"); } ~
+Suppose you have a line like this, and you want to rename the type from
+"NodeList" to "FooBarSet", and adapt the variable name, too:
+    function set nodeList(nodeList:NodeList):void; // Update node list. ~
 
-With the cursor on the start of any of the "de", type gce, enter the text
-"en", then press <Esc>. The line will turn into
-    A[lang=en]:after, SPAN[lang=en]:after { content: url("lang.en.gif"); } ~
+With the cursor on the start of any of the "nodeList", type gCe, enter the
+text "fooBarSet", then press <Esc>. The line will turn into
+    function set fooBarSet(fooBarSet:FooBarSet):void; // Update foo bar set. ~
 You can now re-apply this substitution to other lines or a visual selection
 via |.|
 
