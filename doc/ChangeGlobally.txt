@@ -22,7 +22,7 @@ buffer.
 This plugin implements a hybrid of these two contrasting approaches: It offers
 a |gc| command that works just like built-in |c|, and after leaving insert
 mode applies the local substitution to all other occurrences in the current
-line (in case of a small character change) or, when entire line(s) where
+line (in case of a small character change) or, when entire line(s) were
 changed, to the rest of the buffer.
 
 HOW IT WORKS								     *
