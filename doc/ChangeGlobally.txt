@@ -40,6 +40,12 @@ SEE ALSO								     *
   different coding styles like CamelCase and underscore_notation ("maxSize",
   "MAX_SIZE").
 
+RELATED WORKS								     *
+
+- multichange.vim (vimscript #4309) uses a command :[range]MultiChange to
+  modify the default c command to do an entire-word global substitution in the
+  entire range.
+
 ==============================================================================
 USAGE							*ChangeGlobally-usage*
 								   *gc* *v_gc*
