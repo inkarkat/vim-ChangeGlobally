@@ -14,6 +14,8 @@
 "				ChangeGloballySmartCase.vim moved \V\C into
 "				l:search, so the start-of-line atom that comes
 "				before it must be written as ^, not \^.
+"				Use change number instead of the flaky
+"				comparison with captured previous inserted text.
 "   1.00.004	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
 "				configuration.
 "				Merge ChangeGlobally#SetCount() and
@@ -119,7 +121,7 @@ function! ChangeGlobally#Operator( type )
     " TODO: Special case for "_
     execute 'normal! "' . s:register . l:deleteCommand
 
-    let s:previousInsertedText = @.
+    let s:originalChangeNr = changenr()
     if l:isAtEndOfLine || s:range ==# 'buffer'
 	startinsert!
     else
@@ -224,10 +226,7 @@ endfunction
 function! ChangeGlobally#Substitute()
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
-    " XXX: :startinsert does not clear register . when insertion is aborted
-    " immediately (in Vim 7.3). So compare with the captured previous contents,
-    " too.
-    let l:hasAbortedInsert = getpos("'[") == getpos("']") && (empty(@.) || @. ==# s:previousInsertedText)
+    let l:hasAbortedInsert = changenr() <= s:originalChangeNr
 "****D echomsg '****' string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert
     let l:changedText = getreg(s:register)
     let s:newText = s:GetInsertion(s:range)
