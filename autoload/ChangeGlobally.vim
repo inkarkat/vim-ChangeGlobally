@@ -1,4 +1,4 @@
-" ChangeGlobally.vim: Change {motion} text and repeat the substitution on the entire line.
+" ChangeGlobally.vim: Change {motion} text and repeat the substitution.
 "
 " DEPENDENCIES:
 "   - ingointegration.vim autoload script
