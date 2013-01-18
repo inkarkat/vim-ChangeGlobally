@@ -3,12 +3,17 @@
 " DEPENDENCIES:
 "   - ingointegration.vim autoload script
 "
-" Copyright: (C) 2012 Ingo Karkat
+" Copyright: (C) 2012-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.01.005	19-Jan-2013	BUG: Linewise changes (gcc) causes beep instead
+"				of substitution. The refactoring for
+"				ChangeGloballySmartCase.vim moved \V\C into
+"				l:search, so the start-of-line atom that comes
+"				before it must be written as ^, not \^.
 "   1.00.004	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
 "				configuration.
 "				Merge ChangeGlobally#SetCount() and
@@ -226,7 +231,7 @@ function! ChangeGlobally#Substitute()
 "****D echomsg '****' string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert
     let l:changedText = getreg(s:register)
     let s:newText = s:GetInsertion(s:range)
-"****Dechomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
+"****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
 
@@ -305,7 +310,7 @@ function! ChangeGlobally#Substitute()
 	" entire lines are substituted. Were we to alternatively append a \r to
 	" the replacement, the next line would be involved and the cursor
 	" misplaced.
-	let s:substitution = printf('\^%s\$/%s/',
+	let s:substitution = printf('^%s\$/%s/',
 	\   substitute(l:search, '\\n$', '', ''),
 	\   l:replace
 	\)
