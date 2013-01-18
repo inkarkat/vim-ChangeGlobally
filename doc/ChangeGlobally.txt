@@ -15,10 +15,9 @@ history				|ChangeGlobally-history|
 DESCRIPTION					  *ChangeGlobally-description*
 
 Changing existing text is one of the main editing tasks. In Vim, there are two
-approaches: Either one uses of the |c| and |s| commands, then quits insert
-mode, maybe repeating this via |.| at another location. Or one builds a
-|:substitute| command for controlled replacement in the line, range, or
-buffer.
+approaches: Either use the |c| and |s| commands, then quit insert mode; maybe
+repeat this via |.| at another location. Or build a |:substitute| command for
+controlled replacement in the line, range, or buffer.
 This plugin implements a hybrid of these two contrasting approaches: It offers
 a |gc| command that works just like built-in |c|, and after leaving insert
 mode applies the local substitution to all other occurrences in the current
@@ -34,7 +33,7 @@ SEE ALSO								     *
 
 - ReplaceWithRegister (vimscript #2703) simplifies another frequent editing
   task: Replace the selection with the contents of register.
-- ChangeGloballySmartCase (vimscript #0000) is an add-on to this plugin that
+- ChangeGloballySmartCase (vimscript #4322) is an add-on to this plugin that
   implements a |gC| variant that uses a "smart case" substitution which covers
   variations in upper-/lowercase ("maxSize" vs. "MaxSize") as well as
   different coding styles like CamelCase and underscore_notation ("maxSize",
@@ -81,17 +80,10 @@ USAGE							*ChangeGlobally-usage*
 ["x]gcc			Delete [count] lines [into register x] and start
 			insert |linewise|. If 'autoindent' is on, preserve the
 			indent of the first line. After exiting insert mode,
-			the substitution is globally applied.
+			the substitution is applied globally.
 
-			For a characterwise change, all other occurrences of
-			the deleted text in the changed line(s) are
-			substituted with the newly inserted text.
-			For a linewise change, all other lines that match the
-			deleted line(s) are replaced with the newly inserted
-			text.
-			The mapping is not available in blockwise visual mode.
 
-			When the command is repeated via |.|, the previous
+			When a command is repeated via |.|, the previous
 			substitution (without entering a new insert mode) is
 			re-applied to the visual selection, [count] next
 			lines, or the range of the previous substitution.
@@ -101,13 +93,12 @@ USAGE							*ChangeGlobally-usage*
 
 EXAMPLE						      *ChangeGlobally-example*
 
-Suppose you have a line like this, and you want to rename the type from
-"NodeList" to "FooBarSet", and adapt the variable name, too:
-    function set nodeList(nodeList:NodeList):void; // Update node list. ~
+Suppose you have a line like this, and you want to change "de" to "en":
+    A[lang=de]:after, SPAN[lang=de]:after { content: url("lang.de.gif"); } ~
 
-With the cursor on the start of any of the "nodeList", type gCe, enter the
-text "fooBarSet", then press <Esc>. The line will turn into
-    function set fooBarSet(fooBarSet:FooBarSet):void; // Update foo bar set. ~
+With the cursor on the start of any of the "de", type gce, enter the text
+"en", then press <Esc>. The line will turn into
+    A[lang=en]:after, SPAN[lang=en]:after { content: url("lang.en.gif"); } ~
 You can now re-apply this substitution to other lines or a visual selection
 via |.|
 
@@ -155,7 +146,7 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
-GOAL
+1.00	23-Nov-2012
 First published version.
 
 0.01	29-Aug-2012
