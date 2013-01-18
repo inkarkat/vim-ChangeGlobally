@@ -134,7 +134,14 @@ To turn off this feature, set the threshold to 0.
 ==============================================================================
 LIMITATIONS					  *ChangeGlobally-limitations*
 
+- During the insertion, insert-mode mappings that use |i_CTRL-O| cause an
+  |InsertLeave| event, and therefore trigger the global change -- prematurely,
+  as perceived by the user who isn't aware of this.
+
 KNOWN PROBLEMS				       *ChangeGlobally-known-problems*
+
+- Creation of undo points during the insertion (|i_CTRL-G_u|) messes up the
+  whole change.
 
 TODO							 *ChangeGlobally-todo*
 
@@ -146,6 +153,9 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
+1.01	19-Jan-2013
+BUG: Linewise changes (gcc) causes beep instead of substitution.
+
 1.00	23-Nov-2012
 First published version.
 
@@ -153,7 +163,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012 Ingo Karkat
+Copyright: (C) 2012-2013 Ingo Karkat
 The VIM LICENSE applies to this script; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
