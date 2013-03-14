@@ -140,9 +140,6 @@ LIMITATIONS					  *ChangeGlobally-limitations*
 
 KNOWN PROBLEMS				       *ChangeGlobally-known-problems*
 
-- Creation of undo points during the insertion (|i_CTRL-G_u|) messes up the
-  whole change.
-
 TODO							 *ChangeGlobally-todo*
 
 - Implement special case for the black-hole register, where we cannot extract
@@ -152,6 +149,12 @@ IDEAS							*ChangeGlobally-ideas*
 
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
+
+1.10	19-Jan-2013
+ENH: Handle undo points created during insertion: Undo the whole insertion
+sequence (by using :undo with the original change number) and substitute the
+entire captured insertion, not just the last part, by detecting a multi-change
+insert and using the original start position instead of the start change mark.
 
 1.01	19-Jan-2013
 BUG: Linewise changes (gcc) causes beep instead of substitution.
