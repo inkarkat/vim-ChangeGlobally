@@ -9,13 +9,20 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.10.006	19-Jan-2013	Use change number instead of the flaky
+"				comparison with captured previous inserted text.
+"				ENH: Handle undo points created during
+"				insertion: Undo the whole insertion sequence (by
+"				using :undo with the original change number) and
+"				substitute the entire captured insertion, not
+"				just the last part, by detecting a multi-change
+"				insert and using the original start position
+"				instead of the start change mark.
 "   1.01.005	19-Jan-2013	BUG: Linewise changes (gcc) causes beep instead
 "				of substitution. The refactoring for
 "				ChangeGloballySmartCase.vim moved \V\C into
 "				l:search, so the start-of-line atom that comes
 "				before it must be written as ^, not \^.
-"				Use change number instead of the flaky
-"				comparison with captured previous inserted text.
 "   1.00.004	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
 "				configuration.
 "				Merge ChangeGlobally#SetCount() and
@@ -122,6 +129,7 @@ function! ChangeGlobally#Operator( type )
     execute 'normal! "' . s:register . l:deleteCommand
 
     let s:originalChangeNr = changenr()
+    let s:insertStartPos = getpos("'[")[1:2]
     if l:isAtEndOfLine || s:range ==# 'buffer'
 	startinsert!
     else
@@ -149,21 +157,34 @@ function! ChangeGlobally#OperatorExpression()
     return l:keys
 endfunction
 
-function! s:GetInsertion( range )
+function! s:GetInsertion( range, isMultiChangeInsert )
     " Unfortunately, we cannot simply use register "., because it contains all
     " editing keys, so also <Del> and <BS>, which show up in raw form "<80>kD".
     " Instead, we rely on the range delimited by the marks '[ and '] (last one
     " exclusive).
 
+    if a:isMultiChangeInsert
+	" When an undo point is created during insertion |i_CTRL-G_u|, the
+	" change marks are reset, too, and we would only capture the last part
+	" of the insertion. Use the original start position instead to capture
+	" the entire inserted text.
+	let l:startPos = s:insertStartPos
+    else
+	" In the usual case, do use the start change mark, though. This makes
+	" the capture more robust in the case that the whole change position
+	" shifted (e.g. by indenting via |i_CTRL-T|).
+	let l:startPos = getpos("'[")[1:2]
+    endif
+
     if a:range ==# 'buffer'
 	" There may have been existing indent before we started editing, which
 	" isn't captured by '[, but which we need to correctly reproduce the
 	" change. Therefore, grab the entire starting line.
-	let l:startPos = [line("'["), 1]
-    else
-	let l:startPos = getpos("'[")[1:2]
+	let l:startPos[1] = 1
     endif
+
     let l:endPos = [line("']"), (col("']") - 1)]
+
     return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
 function! s:CountMatches( pattern )
@@ -227,9 +248,10 @@ function! ChangeGlobally#Substitute()
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
     let l:hasAbortedInsert = changenr() <= s:originalChangeNr
-"****D echomsg '****' string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert
+    let l:isMultiChangeInsert = (changenr() > s:originalChangeNr + 1)
+"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
     let l:changedText = getreg(s:register)
-    let s:newText = s:GetInsertion(s:range)
+    let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
 "****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
@@ -254,7 +276,7 @@ function! ChangeGlobally#Substitute()
     " s:newText; without the undo, we would need to avoid re-applying the
     " substitution over the just changed part of the line.
     if ! l:hasAbortedInsert
-	silent undo " the insertion of s:newText
+	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
     endif
     silent undo " the deletion of l:changedText
 
