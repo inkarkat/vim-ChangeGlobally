@@ -9,6 +9,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.11.007	21-Mar-2013	Avoid changing the jumplist.
 "   1.10.006	19-Jan-2013	Use change number instead of the flaky
 "				comparison with captured previous inserted text.
 "				ENH: Handle undo points created during
@@ -111,10 +112,10 @@ function! ChangeGlobally#Operator( type )
     elseif a:type ==# 'char'
 	let s:range = 'line'
 	let l:isAtEndOfLine = (col("']") + 1 == col('$'))
-	silent! execute 'normal! `[v`]'. (&selection ==# 'exclusive' ? 'l' : '')
+	silent! execute 'normal! g`[vg`]'. (&selection ==# 'exclusive' ? 'l' : '')
     elseif a:type ==# 'line'
 	let s:range = 'buffer'
-	silent! execute "normal! '[V']"
+	silent! execute "normal! g'[Vg']"
     elseif a:type ==# 'block'
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	return
