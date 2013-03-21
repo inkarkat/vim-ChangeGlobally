@@ -150,6 +150,9 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
+1.11	RELEASEME
+Avoid changing the jumplist.
+
 1.10	19-Jan-2013
 ENH: Handle undo points created during insertion: Undo the whole insertion
 sequence (by using :undo with the original change number) and substitute the
