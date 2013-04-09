@@ -9,6 +9,10 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.11.008	22-Mar-2013	Autocmds may interfere with the plugin when they
+"				temporarily leave insert mode (i_CTRL-O) or
+"				create an undo point (i_CTRL-G_u). Disable them
+"				until the user is done inserting.
 "   1.11.007	21-Mar-2013	Avoid changing the jumplist.
 "   1.10.006	19-Jan-2013	Use change number instead of the flaky
 "				comparison with captured previous inserted text.
@@ -92,9 +96,31 @@ function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visu
     endif
 endfunction
 function! s:ArmInsertMode()
+    " Autocmds may interfere with the plugin when they temporarily leave insert
+    " mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until
+    " the user is done inserting.
+    if &eventignore ==? 'all'
+	" Also handle the (unlikely) case where autocmds are completely turned
+	" off.
+	let s:save_eventignore = &eventignore
+	set eventignore=
+    elseif ! empty(&eventignore)
+	let s:save_eventignore = &eventignore
+	set eventignore-=CursorMovedI
+	set eventignore-=CursorHoldI
+    endif
+
     augroup ChangeGlobally
-	autocmd! InsertLeave * call ChangeGlobally#Substitute() | autocmd! ChangeGlobally
+	autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute()
     augroup END
+endfunction
+function! ChangeGlobally#UnarmInsertMode()
+    autocmd! ChangeGlobally
+
+    if exists('s:save_eventignore')
+	let &eventignore = s:save_eventignore
+	unlet s:save_eventignore
+    endif
 endfunction
 function! ChangeGlobally#Operator( type )
     let l:isAtEndOfLine = 0
