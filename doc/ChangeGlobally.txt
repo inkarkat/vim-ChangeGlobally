@@ -151,7 +151,10 @@ IDEAS							*ChangeGlobally-ideas*
 HISTORY						      *ChangeGlobally-history*
 
 1.11	RELEASEME
-Avoid changing the jumplist.
+- Avoid changing the jumplist.
+- Autocmds may interfere with the plugin when they temporarily leave insert
+  mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until the
+  user is done inserting.
 
 1.10	19-Jan-2013
 ENH: Handle undo points created during insertion: Undo the whole insertion
