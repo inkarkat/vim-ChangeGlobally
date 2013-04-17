@@ -116,6 +116,8 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					 *ChangeGlobally-dependencies*
 
 - Requires Vim 7.0 or higher.
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.005 or
+  higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - visualrepeat.vim (vimscript #3848) plugin (optional)
 
@@ -155,6 +157,7 @@ HISTORY						      *ChangeGlobally-history*
 - Autocmds may interfere with the plugin when they temporarily leave insert
   mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until the
   user is done inserting.
+- Add dependency to ingo-library (vimscript #4433).
 
 1.10	19-Jan-2013
 ENH: Handle undo points created during insertion: Undo the whole insertion
