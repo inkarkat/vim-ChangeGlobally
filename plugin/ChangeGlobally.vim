@@ -62,7 +62,7 @@ vnoremap <silent> <Plug>(ChangeGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#SetParameters(v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \call ChangeGlobally#Operator(visualmode())<CR>
-if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'v')
+if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'x')
     xmap gc <Plug>(ChangeGloballyVisual)
 endif
 
