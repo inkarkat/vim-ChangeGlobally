@@ -1,6 +1,7 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution.
 "
 " DEPENDENCIES:
+"   - ingo/search/buffer.vim autoload script
 "   - ingointegration.vim autoload script
 "
 " Copyright: (C) 2012-2013 Ingo Karkat
@@ -9,6 +10,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.11.009	10-Apr-2013	Move s:IsKeywordMatch() into ingo-library.
 "   1.11.008	22-Mar-2013	Autocmds may interfere with the plugin when they
 "				temporarily leave insert mode (i_CTRL-O) or
 "				create an undo point (i_CTRL-G_u). Disable them
@@ -220,12 +222,6 @@ function! s:CountMatches( pattern )
     redir END
     return str2nr(matchstr(l:substitutionCounting, '\d\+'))
 endfunction
-function! s:IsKeywordMatch( text, changeStartVirtCol )
-    return search(
-    \   printf('\C\V\%%%dv\<%s\>', a:changeStartVirtCol, escape(a:text, '\')),
-    \	'cnW', line('.')
-    \)
-endfunction
 function! s:LastReplaceInit()
     let s:lastReplaceCnt = 0
     let s:lastReplacementLnum = line('.')
@@ -321,7 +317,7 @@ function! ChangeGlobally#Substitute()
     let l:locationRestriction = ''
     let s:locationRestriction = ''
     if s:range ==# 'line'
-	if ! s:isVisualMode && s:IsKeywordMatch(l:changedText, l:changeStartVirtCol)
+	if ! s:isVisualMode && ingo#search#buffer#IsKeywordMatch(l:changedText, l:changeStartVirtCol)
 	    " When the changed text is surrounded by keyword boundaries, only
 	    " perform keyword replacements to avoid replacing other matches
 	    " inside keywords (e.g. "in" inside "ring").
