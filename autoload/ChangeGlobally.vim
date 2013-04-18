@@ -391,7 +391,6 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
     if a:isVisualMode
 	let l:range = "'<,'>"
 	if visualmode() ==# "\<C-v>"
-echomsg '****' string(s:locationRestriction) string(s:substitution)
 	    " Special handling for blockwise selection:
 	    " - With buffer range, match not only complete lines (they probably
 	    "   aren't fully selected), just the text itself.
@@ -405,18 +404,12 @@ echomsg '****' string(s:locationRestriction) string(s:substitution)
 	    " - Apply within the entire selected block.
 	    "   Special case must be taken to when the match ends at the end of
 	    "   the visual selection, as \%V is a zero-width pattern.
-	    "   Fortunately, we're only dealing with fixed characters here.
-	    let [l:rest, l:tail] = matchlist(s:substitution, '^\(.\{-}\)\(\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\/\|.\)$')[1:2]
-	    let s:substitution[1] =
-	    \   printf('\%%V%s\%%V\|', s:substitution) .
-	    \   (empty(l:rest) ?
-	    \       printf('\%%V%s', l:tail) :
-	    \       printf('\%%V%s\%%V%s', l:rest, l:tail)
-	    \   )
+	    if s:substitution[1][0:2] !=# '\%V'
+		let s:substitution[1] = '\%V' . s:substitution[1] . '\%(\%V\|\%(\%V\.\)\@<=\)'
+	    endif
 	    " All these modifications are done to the persisted variables, so
 	    " the blockwise repeat could be cleverly employed to remove certain
 	    " change restrictions for following repeats of different kinds.
-echomsg '****' s:substitution[1]
 	endif
     elseif v:count1 > 1
 	" Avoid "E16: invalid range" when a too large [count] was given.
@@ -440,6 +433,7 @@ echomsg '****' s:substitution[1]
 		call s:Report(s:individualReplace.count, s:individualReplace.lines)
 	    unlet s:individualReplace
 	else
+echomsg '****' s:count string(s:locationRestriction) string(s:substitution)
 	    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	    endif
