@@ -380,8 +380,8 @@ function! ChangeGlobally#Substitute()
     silent! call visualrepeat#set(s:visualrepeatMapping)
 endfunction
 
-function! s:IndividualSubstitute( substitutionArguments )
-    let l:count = s:Substitute('.', a:substitutionArguments)
+function! s:IndividualSubstitute( locationRestriction, substitutionArguments )
+    let l:count = s:Substitute('.', a:locationRestriction, a:substitutionArguments)
     let s:individualReplace.count += l:count
     let s:individualReplace.lines += (l:count ? 1 : 0)
 endfunction
@@ -390,7 +390,34 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
     " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
 	let l:range = "'<,'>"
+	if visualmode() ==# "\<C-v>"
 echomsg '****' string(s:locationRestriction) string(s:substitution)
+	    " Special handling for blockwise selection:
+	    " - With buffer range, match not only complete lines (they probably
+	    "   aren't fully selected), just the text itself.
+	    let s:substitution[0] = ''
+	    let s:substitution[2] = ''
+	    " - Drop the location restriction to after certain columns; they may
+	    "   not even fall into the selected block.
+	    let s:locationRestriction = ''
+	    " Likewise, drop the [N] times restriction.
+	    let s:count = 0
+	    " - Apply within the entire selected block.
+	    "   Special case must be taken to when the match ends at the end of
+	    "   the visual selection, as \%V is a zero-width pattern.
+	    "   Fortunately, we're only dealing with fixed characters here.
+	    let [l:rest, l:tail] = matchlist(s:substitution, '^\(.\{-}\)\(\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\/\|.\)$')[1:2]
+	    let s:substitution[1] =
+	    \   printf('\%%V%s\%%V\|', s:substitution) .
+	    \   (empty(l:rest) ?
+	    \       printf('\%%V%s', l:tail) :
+	    \       printf('\%%V%s\%%V%s', l:rest, l:tail)
+	    \   )
+	    " All these modifications are done to the persisted variables, so
+	    " the blockwise repeat could be cleverly employed to remove certain
+	    " change restrictions for following repeats of different kinds.
+echomsg '****' s:substitution[1]
+	endif
     elseif v:count1 > 1
 	" Avoid "E16: invalid range" when a too large [count] was given.
 	let l:range = (line('.') + v:count - 1 < line('$') ? '.,.+'.(v:count1 - 1) : '.,$')
