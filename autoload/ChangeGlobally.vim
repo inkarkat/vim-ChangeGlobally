@@ -250,8 +250,10 @@ function! s:Report( replaceCnt, replacementLines )
 	\)
     endif
 endfunction
-function! s:Substitute( range, substitutionArguments )
-    let l:substitutionCommand = a:range . 'substitute/' . a:substitutionArguments . 'e'
+function! s:Substitute( range, localRestriction, substitutionArguments )
+    " a:substitutionArguments format:
+    "   [patternPrefix, pattern, patternPostfix, separator, replacement, separator, flags]
+    let l:substitutionCommand = a:range . 'substitute/' . a:localRestriction . join(a:substitutionArguments, '') . 'e'
 "****D echomsg '****' l:substitutionCommand
     call s:LastReplaceInit()
     if s:count
@@ -345,10 +347,7 @@ function! ChangeGlobally#Substitute()
 	    let l:beyondLineRange = '%'
 	endif
 
-	let s:substitution = printf('%s/%s/g',
-	\   l:search,
-	\   l:replace
-	\)
+	let s:substitution = ['', l:search, '', '/', l:replace, '/', 'g']
 
 	" Note: The line may have been split into multiple lines by the editing;
 	" use '[, '] instead of the . range.
@@ -359,10 +358,7 @@ function! ChangeGlobally#Substitute()
 	" entire lines are substituted. Were we to alternatively append a \r to
 	" the replacement, the next line would be involved and the cursor
 	" misplaced.
-	let s:substitution = printf('^%s\$/%s/',
-	\   substitute(l:search, '\\n$', '', ''),
-	\   l:replace
-	\)
+	let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '\$', '/', l:replace, '/', '']
 
 	let l:range = (s:count ? '.,$' : '%')
     else
@@ -372,7 +368,7 @@ function! ChangeGlobally#Substitute()
 
     " Note: Only part of the location restriction (without the line restriction)
     " applies to repeats, so it's not included in s:substitution.
-    if empty(s:substitution) || s:Substitute(l:range, l:locationRestriction . s:substitution) <= 1
+    if s:Substitute(l:range, l:locationRestriction, s:substitution) <= 1
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
     endif
 
@@ -394,6 +390,7 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
     " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
 	let l:range = "'<,'>"
+echomsg '****' string(s:locationRestriction) string(s:substitution)
     elseif v:count1 > 1
 	" Avoid "E16: invalid range" when a too large [count] was given.
 	let l:range = (line('.') + v:count - 1 < line('$') ? '.,.+'.(v:count1 - 1) : '.,$')
@@ -410,13 +407,13 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	    " any repeat count would be without effect.
 	    let s:individualReplace = {'count': 0, 'lines': 0}
 		" Note: Use :silent to avoid the intermediate reporting.
-		silent execute l:range 'call s:IndividualSubstitute(s:locationRestriction . s:substitution)'
+		silent execute l:range 'call s:IndividualSubstitute(s:locationRestriction, s:substitution)'
 
 		" And do the reporting on the accummulated statistics later.
 		call s:Report(s:individualReplace.count, s:individualReplace.lines)
 	    unlet s:individualReplace
 	else
-	    if s:Substitute(l:range, s:locationRestriction . s:substitution) == 0
+	    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	    endif
 	endif
