@@ -3,6 +3,9 @@
 " DEPENDENCIES:
 "   - ingo/search/buffer.vim autoload script
 "   - ingointegration.vim autoload script
+"   - repeat.vim (vimscript #2136) autoload script (optional)
+"   - visualrepeat.vim (vimscript #3848) autoload script (optional)
+"   - visualrepeat/reapply.vim autoload script (optional)
 "
 " Copyright: (C) 2012-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
@@ -10,6 +13,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.010	18-Apr-2013	Add ChangeGlobally#VisualMode() wrapper around
+"				visualrepeat#reapply#VisualMode().
 "   1.11.009	10-Apr-2013	Move s:IsKeywordMatch() into ingo-library.
 "   1.11.008	22-Mar-2013	Autocmds may interfere with the plugin when they
 "				temporarily leave insert mode (i_CTRL-O) or
@@ -428,6 +433,12 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 
     silent! call       repeat#set(a:repeatMapping)
     silent! call visualrepeat#set(a:visualrepeatMapping)
+endfunction
+
+function! ChangeGlobally#VisualMode()
+    let l:keys = "1v\<Esc>"
+    silent! let l:keys = visualrepeat#reapply#VisualMode(0)
+    return l:keys
 endfunction
 
 let &cpo = s:save_cpo
