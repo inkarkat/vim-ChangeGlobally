@@ -13,6 +13,15 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.011	19-Apr-2013	ENH: Special handling for repeat on blockwise
+"				selection that makes more sense.
+"				Separate components of a:substitutionArguments
+"				into a List that is join()ed together in
+"				s:Substitute().
+"				Stop duplicating s:count into l:replace and
+"				instead access directly from
+"				ChangeGlobally#CountedReplace().
+"				Drop unnecessary empty check for s:substitution.
 "   1.20.010	18-Apr-2013	Add ChangeGlobally#VisualMode() wrapper around
 "				visualrepeat#reapply#VisualMode().
 "   1.11.009	10-Apr-2013	Move s:IsKeywordMatch() into ingo-library.
@@ -232,8 +241,8 @@ function! s:LastReplaceInit()
     let s:lastReplacementLnum = line('.')
     let s:lastReplacementLines = {}
 endfunction
-function! ChangeGlobally#CountedReplace( count )
-    if ! a:count || s:lastReplaceCnt < a:count
+function! ChangeGlobally#CountedReplace()
+    if ! s:count || s:lastReplaceCnt < s:count
 	let s:lastReplaceCnt += 1
 	let s:lastReplacementLnum = line('.')
 	let s:lastReplacementLines[line('.')] = 1
@@ -296,7 +305,7 @@ function! ChangeGlobally#Substitute()
     " may contain the / substitution separator, which must not appear at all in
     " the expression. Therefore, we store this in a variable and directly
     " reference it from ChangeGlobally#CountedReplace().
-    let l:replace = printf('\=ChangeGlobally#CountedReplace(%d)', s:count)
+    let l:replace = '\=ChangeGlobally#CountedReplace()'
 
 
     " To turn the change and following substitutions into a single change, first
@@ -399,7 +408,7 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	    " - Drop the location restriction to after certain columns; they may
 	    "   not even fall into the selected block.
 	    let s:locationRestriction = ''
-	    " Likewise, drop the [N] times restriction.
+	    " Likewise, drop the [N] times limit.
 	    let s:count = 0
 	    " - Apply within the entire selected block.
 	    "   Special case must be taken to when the match ends at the end of
@@ -433,7 +442,6 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 		call s:Report(s:individualReplace.count, s:individualReplace.lines)
 	    unlet s:individualReplace
 	else
-echomsg '****' s:count string(s:locationRestriction) string(s:substitution)
 	    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	    endif
