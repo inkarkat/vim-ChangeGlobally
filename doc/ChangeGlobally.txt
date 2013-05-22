@@ -82,7 +82,7 @@ USAGE							*ChangeGlobally-usage*
 			indent of the first line. After exiting insert mode,
 			the substitution is applied globally.
 
-
+						       *ChangeGlobally-repeat*
 			When a command is repeated via |.|, the previous
 			substitution (without entering a new insert mode) is
 			re-applied to the visual selection, [count] next
@@ -90,6 +90,20 @@ USAGE							*ChangeGlobally-usage*
 			For a command that used a limit [N], the number of
 			substitutions and the start column from where they
 			were applied are kept.
+					     *ChangeGlobally-repeat-blockwise*
+			With the |visualrepeat.vim| plugin, commands can be
+			repeated on a |blockwise-visual| selection. In that
+			case:
+			- A repeat of |gcc| matches not only complete lines
+			  (they probably aren't fully selected), just the text
+			  itself.
+			- Start column and [N] limit restrictions are dropped;
+			  the change is applied anywhere inside the selected
+			  block.
+			All these modifications are kept for subsequent
+			repeats of the repeat, so the blockwise repeat can be
+			cleverly employed to remove certain change
+			restrictions for following repeats of different kinds.
 
 EXAMPLE						      *ChangeGlobally-example*
 
@@ -153,7 +167,8 @@ IDEAS							*ChangeGlobally-ideas*
 HISTORY						      *ChangeGlobally-history*
 
 1.20	RELEASEME
-- Avoid changing the jumplist.
+- ENH: Special handling for repeat on blockwise selection (through
+  visualrepeat.vim) that makes more sense.
 - Autocmds may interfere with the plugin when they temporarily leave insert
   mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until the
   user is done inserting.
@@ -162,6 +177,7 @@ HISTORY						      *ChangeGlobally-history*
   visual mapping. When supplying a [count] on such repeat of a previous
   linewise selection, now [count] number of lines instead of [count] times the
   original selection is used.
+- Avoid changing the jumplist.
 
 1.10	19-Jan-2013
 ENH: Handle undo points created during insertion: Undo the whole insertion
