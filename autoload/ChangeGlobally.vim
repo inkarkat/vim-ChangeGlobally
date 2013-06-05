@@ -13,6 +13,9 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.012	23-May-2013	For \%V to work on a zero-width block selection
+"				with :set selection=exclusive, a special case
+"				(provided by the ingo-library) must be applied.
 "   1.20.011	19-Apr-2013	ENH: Special handling for repeat on blockwise
 "				selection that makes more sense.
 "				Separate components of a:substitutionArguments
@@ -227,7 +230,7 @@ function! s:GetInsertion( range, isMultiChangeInsert )
     endif
 
     let l:endPos = [line("']"), (col("']") - 1)]
-
+"****D echomsg '****' a:isMultiChangeInsert string(l:startPos) string(l:endPos)
     return ingointegration#GetText(l:startPos, l:endPos)
 endfunction
 function! s:CountMatches( pattern )
@@ -411,6 +414,9 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	    " Likewise, drop the [N] times limit.
 	    let s:count = 0
 	    " - Apply within the entire selected block.
+	    "   For \%V to work on a zero-width block selection with :set
+	    "   selection=exclusive, a special case must be applied.
+	    call ingo#selection#patternmatch#AdaptEmptySelection()
 	    "   Special case must be taken to when the match ends at the end of
 	    "   the visual selection, as \%V is a zero-width pattern.
 	    if s:substitution[1][0:2] !=# '\%V'
