@@ -13,6 +13,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.013	06-Jun-2013	Simplify \%V end-match pattern.
 "   1.20.012	23-May-2013	For \%V to work on a zero-width block selection
 "				with :set selection=exclusive, a special case
 "				(provided by the ingo-library) must be applied.
@@ -420,7 +421,7 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	    "   Special case must be taken to when the match ends at the end of
 	    "   the visual selection, as \%V is a zero-width pattern.
 	    if s:substitution[1][0:2] !=# '\%V'
-		let s:substitution[1] = '\%V' . s:substitution[1] . '\%(\%V\|\%(\%V\.\)\@<=\)'
+		let s:substitution[1] = '\%V' . s:substitution[1] . '\%(\%V\.\)\@<='
 	    endif
 	    " All these modifications are done to the persisted variables, so
 	    " the blockwise repeat could be cleverly employed to remove certain
