@@ -1,6 +1,7 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution.
 "
 " DEPENDENCIES:
+"   - ingo/msg.vim autoload script
 "   - ingo/search/buffer.vim autoload script
 "   - ingointegration.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
@@ -13,6 +14,7 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.014	14-Jun-2013	Use ingo/msg.vim.
 "   1.20.013	06-Jun-2013	Simplify \%V end-match pattern.
 "   1.20.012	23-May-2013	For \%V to work on a zero-width block selection
 "				with :set selection=exclusive, a special case
@@ -454,13 +456,7 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	    endif
 	endif
     catch /^Vim\%((\a\+)\)\=:E/
-	" v:exception contains what is normally in v:errmsg, but with extra
-	" exception source info prepended, which we cut away.
-	let v:errmsg = substitute(v:exception, '^Vim\%((\a\+)\)\=:', '', '')
-	echohl ErrorMsg
-	echomsg v:errmsg
-	echohl None
-
+	call ingo#msg#VimExceptionMsg()
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
     endtry
 
