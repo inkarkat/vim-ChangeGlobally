@@ -1,0 +1,4 @@
+autoload/ingointegration.vim
+autoload/ChangeGlobally.vim
+plugin/ChangeGlobally.vim
+doc/ChangeGlobally.txt
