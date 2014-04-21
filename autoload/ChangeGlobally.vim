@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ingo/msg.vim autoload script
 "   - ingo/search/buffer.vim autoload script
-"   - ingointegration.vim autoload script
+"   - ingo/text.vim autoload script
 "   - repeat.vim (vimscript #2136) autoload script (optional)
 "   - visualrepeat.vim (vimscript #3848) autoload script (optional)
 "   - visualrepeat/reapply.vim autoload script (optional)
@@ -14,6 +14,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.015	23-Jul-2013	Move ingointegration#GetText() into
+"				ingo-library.
 "   1.20.014	14-Jun-2013	Use ingo/msg.vim.
 "   1.20.013	06-Jun-2013	Simplify \%V end-match pattern.
 "   1.20.012	23-May-2013	For \%V to work on a zero-width block selection
@@ -234,7 +236,7 @@ function! s:GetInsertion( range, isMultiChangeInsert )
 
     let l:endPos = [line("']"), (col("']") - 1)]
 "****D echomsg '****' a:isMultiChangeInsert string(l:startPos) string(l:endPos)
-    return ingointegration#GetText(l:startPos, l:endPos)
+    return ingo#text#Get(l:startPos, l:endPos)
 endfunction
 function! s:CountMatches( pattern )
     redir => l:substitutionCounting
