@@ -166,20 +166,21 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
-1.20	RELEASEME
+1.20	19-Nov-2013
 - ENH: Special handling for repeat on blockwise selection (through
   visualrepeat.vim) that makes more sense.
 - Autocmds may interfere with the plugin when they temporarily leave insert
   mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until the
   user is done inserting.
-- Add dependency to ingo-library (vimscript #4433).
 - Use optional visualrepeat#reapply#VisualMode() for normal mode repeat of a
   visual mapping. When supplying a [count] on such repeat of a previous
   linewise selection, now [count] number of lines instead of [count] times the
   original selection is used.
 - Avoid changing the jumplist.
+- Add dependency to ingo-library (vimscript #4433). *** You need to separately
+  install ingo-library (vimscript #4433) version 1.011 (or higher)! ***
 
-1.10	19-Jan-2013
+1.10	19-Jan-2013 (unreleased)
 ENH: Handle undo points created during insertion: Undo the whole insertion
 sequence (by using :undo with the original change number) and substitute the
 entire captured insertion, not just the last part, by detecting a multi-change
