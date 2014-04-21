@@ -3,12 +3,18 @@
 " DEPENDENCIES:
 "   - ChangeGlobally.vim autoload script
 "
-" Copyright: (C) 2012 Ingo Karkat
+" Copyright: (C) 2012-2013 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.20.004	18-Apr-2013	Use optional visualrepeat#reapply#VisualMode()
+"				for normal mode repeat of a visual mapping.
+"				When supplying a [count] on such repeat of a
+"				previous linewise selection, now [count] number
+"				of lines instead of [count] times the original
+"				selection is used.
 "   1.00.003	25-Sep-2012	Add g:ChangeGlobally_GlobalCountThreshold
 "				configuration.
 "				Merge ChangeGlobally#SetCount() and
@@ -88,7 +94,7 @@ vnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 " original command).
 nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\execute 'normal!' v:count1 . 'v' . (visualmode() !=# 'V' && &selection ==# 'exclusive' ? ' ' : ''). "o\<lt>Esc>"<Bar>
+\execute 'normal!' ChangeGlobally#VisualMode()<Bar>
 \call ChangeGlobally#Repeat(1, "\<lt>Plug>(ChangeGloballyVisualRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
 
 let &cpo = s:save_cpo
