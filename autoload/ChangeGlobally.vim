@@ -8,12 +8,15 @@
 "   - visualrepeat.vim (vimscript #3848) autoload script (optional)
 "   - visualrepeat/reapply.vim autoload script (optional)
 "
-" Copyright: (C) 2012-2013 Ingo Karkat
+" Copyright: (C) 2012-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.21.016	22-Apr-2014	FIX: Disable global substitution when
+"				g:ChangeGlobally_GlobalCountThreshold is 0, as
+"				is documented.
 "   1.20.015	23-Jul-2013	Move ingointegration#GetText() into
 "				ingo-library.
 "   1.20.014	14-Jun-2013	Use ingo/msg.vim.
@@ -105,7 +108,7 @@ function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visu
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
-    if a:count >= g:ChangeGlobally_GlobalCountThreshold
+    if g:ChangeGlobally_GlobalCountThreshold > 0 && a:count >= g:ChangeGlobally_GlobalCountThreshold
 	" When a very large [count] is given, turn a line-scoped substitution
 	" into a global, buffer-scoped one.
 	let [s:count, s:isForceGlobal] = [0, 1]
