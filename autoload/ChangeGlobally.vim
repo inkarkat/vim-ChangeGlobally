@@ -14,6 +14,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.21.018	23-Apr-2014	Add proper version guard for the \n with :s_c
+"				flag workaround after finding the precise
+"				offending patch.
+"   1.21.017	23-Apr-2014	Make g:ChangeGlobally_ConfirmCount have
+"				precedence over
+"				g:ChangeGlobally_GlobalCountThreshold; as the
+"				former may lie inside the latter.
 "   1.21.016	22-Apr-2014	FIX: Disable global substitution when
 "				g:ChangeGlobally_GlobalCountThreshold is 0, as
 "				is documented.
@@ -111,12 +118,12 @@ function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visu
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
-    if g:ChangeGlobally_GlobalCountThreshold > 0 && a:count >= g:ChangeGlobally_GlobalCountThreshold
+    if g:ChangeGlobally_ConfirmCount > 0 && a:count == g:ChangeGlobally_ConfirmCount
+	let [s:count, s:isForceGlobal, s:isConfirm] = [0, 1, 1]
+    elseif g:ChangeGlobally_GlobalCountThreshold > 0 && a:count >= g:ChangeGlobally_GlobalCountThreshold
 	" When a very large [count] is given, turn a line-scoped substitution
 	" into a global, buffer-scoped one.
 	let [s:count, s:isForceGlobal, s:isConfirm] = [0, 1, 0]
-    elseif g:ChangeGlobally_ConfirmCount > 0 && a:count == g:ChangeGlobally_ConfirmCount
-	let [s:count, s:isForceGlobal, s:isConfirm] = [0, 1, 1]
     else
 	let [s:count, s:isForceGlobal, s:isConfirm] = [a:count, 0, 0]
     endif
@@ -307,9 +314,12 @@ function! ChangeGlobally#Substitute()
 "****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
     let l:changedText = getreg(s:register)
     let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
-    " XXX: Vim (7.3.823, 7.4.258) inserts \n == ^@ literally when the :s_c
-    " confirm flag is given. Convert to \r to work around this.
-    let s:newText = substitute(s:newText, '\n', '\r', 'g')
+    if v:version == 703 && has('patch225') || v:version > 703
+	" XXX: Vim (since 7.3.225, still in 7.4.258) inserts \n == ^@ literally
+	" when the :s_c confirm flag is given. Convert to \r to work around
+	" this.
+	let s:newText = substitute(s:newText, '\n', '\r', 'g')
+    endif
 "****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
