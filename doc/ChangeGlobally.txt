@@ -146,7 +146,13 @@ there are additional substitutions in the current line, a very large [count]
 can be supplied. To change the threshold, use: >
     let g:ChangeGlobally_GlobalCountThreshold = 999
 To turn off this feature, set the threshold to 0.
-
+					       *g:ChangeGlobally_ConfirmCount*
+As it's sometimes not easy to quickly count the number of occurrences to
+replace, or particular occurrences have to be skipped, the special count value
+of 888 makes the commands switch to confirm each replacement (via the |:s_c|
+flag). You can change this value or turn off this feature by setting it to 0: >
+    let g:ChangeGlobally_ConfirmCount = 0
+<
 ==============================================================================
 LIMITATIONS					  *ChangeGlobally-limitations*
 
@@ -165,6 +171,12 @@ IDEAS							*ChangeGlobally-ideas*
 
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
+
+1.21	RELEASEME
+- FIX: Disable global substitution when g:ChangeGlobally_GlobalCountThreshold
+  is 0, as is documented.
+- ENH: Confirm each replacement via :s_c flag when a special
+  g:ChangeGlobally_ConfirmCount is given.
 
 1.20	19-Nov-2013
 - ENH: Special handling for repeat on blockwise selection (through
@@ -196,7 +208,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2013 Ingo Karkat
+Copyright: (C) 2012-2014 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
