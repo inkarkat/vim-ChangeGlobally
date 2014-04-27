@@ -16,7 +16,8 @@
 " REVISION	DATE		REMARKS
 "   1.21.018	23-Apr-2014	Add proper version guard for the \n with :s_c
 "				flag workaround after finding the precise
-"				offending patch.
+"				offending patch and having a patch that fixes
+"				it.
 "   1.21.017	23-Apr-2014	Make g:ChangeGlobally_ConfirmCount have
 "				precedence over
 "				g:ChangeGlobally_GlobalCountThreshold; as the
@@ -314,10 +315,9 @@ function! ChangeGlobally#Substitute()
 "****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
     let l:changedText = getreg(s:register)
     let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
-    if v:version == 703 && has('patch225') || v:version > 703
-	" XXX: Vim (since 7.3.225, still in 7.4.258) inserts \n == ^@ literally
-	" when the :s_c confirm flag is given. Convert to \r to work around
-	" this.
+    if v:version == 703 && has('patch225') || v:version == 704 && ! has('patch261')
+	" XXX: Vim inserts \n == ^@ literally when the :s_c confirm flag is
+	" given. Convert to \r to work around this.
 	let s:newText = substitute(s:newText, '\n', '\r', 'g')
     endif
 "****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
