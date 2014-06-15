@@ -478,7 +478,7 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 		execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	    endif
 	endif
-    catch /^Vim\%((\a\+)\)\=:E/
+    catch /^Vim\%((\a\+)\)\=:/
 	call ingo#msg#VimExceptionMsg()
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
     endtry
