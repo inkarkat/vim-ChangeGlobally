@@ -172,7 +172,7 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
-1.21	RELEASEME
+1.21	25-Apr-2014
 - FIX: Disable global substitution when g:ChangeGlobally_GlobalCountThreshold
   is 0, as is documented.
 - ENH: Confirm each replacement via :s_c flag when a special
