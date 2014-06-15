@@ -3,12 +3,13 @@
 " DEPENDENCIES:
 "   - ChangeGlobally.vim autoload script
 "
-" Copyright: (C) 2012-2013 Ingo Karkat
+" Copyright: (C) 2012-2014 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.21.005	22-Apr-2014	Add g:ChangeGlobally_ConfirmCount configuration.
 "   1.20.004	18-Apr-2013	Use optional visualrepeat#reapply#VisualMode()
 "				for normal mode repeat of a visual mapping.
 "				When supplying a [count] on such repeat of a
@@ -45,6 +46,9 @@ set cpo&vim
 
 if ! exists('g:ChangeGlobally_GlobalCountThreshold')
     let g:ChangeGlobally_GlobalCountThreshold = 999
+endif
+if ! exists('g:ChangeGlobally_ConfirmCount')
+    let g:ChangeGlobally_ConfirmCount = 888
 endif
 
 
