@@ -105,6 +105,14 @@ USAGE							*ChangeGlobally-usage*
 			cleverly employed to remove certain change
 			restrictions for following repeats of different kinds.
 
+								   *gx* *v_gx*
+[N]["x]gx{motion}	Delete {motion} text [into register x] and apply the
+			deletion.
+{Visual}[N]["x]gx	Delete the highlighted text [into register x] and
+			apply the deletion, like with |gc|.		 *gxx*
+["x]gxx			Delete [count] lines [into register x] and apply the
+			deletion globally.
+
 EXAMPLE						      *ChangeGlobally-example*
 
 Suppose you have a line like this, and you want to change "de" to "en":
@@ -171,6 +179,9 @@ IDEAS							*ChangeGlobally-ideas*
 
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
+
+1.30	RELEASEME
+- ENH: Implement global delete as a specialization of an empty change.
 
 1.21	25-Apr-2014
 - FIX: Disable global substitution when g:ChangeGlobally_GlobalCountThreshold
