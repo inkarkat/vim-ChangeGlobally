@@ -161,6 +161,17 @@ of 888 makes the commands switch to confirm each replacement (via the |:s_c|
 flag). You can change this value or turn off this feature by setting it to 0: >
     let g:ChangeGlobally_ConfirmCount = 0
 <
+							*ChangeGlobally-remap*
+If you want to use different mappings, map your keys to the
+<Plug>(ChangeGlobally...) and <Plug>(DeleteGlobally...) mapping targets
+_before_ sourcing the script (e.g. in your |vimrc|): >
+    nmap <Leader>c <Plug>(ChangeGloballyOperator)
+    nmap <Leader>cc <Plug>(ChangeGloballyLine)
+    xmap <Leader>c <Plug>(ChangeGloballyVisual)
+    nmap <Leader>x <Plug>(DeleteGloballyOperator)
+    nmap <Leader>xx <Plug>(DeleteGloballyLine)
+    xmap <Leader>x <Plug>(DeleteGloballyVisual)
+>
 ==============================================================================
 LIMITATIONS					  *ChangeGlobally-limitations*
 
@@ -180,8 +191,9 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
-1.30	RELEASEME
-- ENH: Implement global delete as a specialization of an empty change.
+1.30	12-Dec-2014
+- ENH: Implement global delete (gx{motion}, gxx) as a specialization of an
+  empty change.
 
 1.21	25-Apr-2014
 - FIX: Disable global substitution when g:ChangeGlobally_GlobalCountThreshold
