@@ -14,6 +14,17 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.30.019	16-Jun-2014	ENH: Implement global delete as a specialization
+"				of an empty change.
+"				Add a:isDelete flag to
+"				ChangeGlobally#SetParameters().
+"				Evaluate the flag and skip the arming of insert
+"				mode to implement delete as a change with an
+"				empty replacement.
+"				For linewise delete, don't remove the trailing
+"				newline in the search pattern, so that the
+"				entire line(s) are removed, and no blank line is
+"				left.
 "   1.21.018	23-Apr-2014	Add proper version guard for the \n with :s_c
 "				flag workaround after finding the precise
 "				offending patch and having a patch that fixes
@@ -115,7 +126,8 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! ChangeGlobally#SetParameters( count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
+function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
+    let s:isDelete = a:isDelete
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
@@ -190,10 +202,22 @@ function! ChangeGlobally#Operator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:deleteCommand = (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+    let l:deleteCommand = (s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
 
     " TODO: Special case for "_
     execute 'normal! "' . s:register . l:deleteCommand
+
+    if s:isDelete
+	" For a global deletion, we don't need to set up and go to insert mode;
+	" just record what got deleted, and reapply that.
+
+	" Not needed for deletion.
+	let s:originalChangeNr = -1
+	let s:insertStartPos = [0,0]
+
+	call ChangeGlobally#Substitute()
+	return
+    endif
 
     let s:originalChangeNr = changenr()
     let s:insertStartPos = getpos("'[")[1:2]
@@ -310,16 +334,21 @@ endfunction
 function! ChangeGlobally#Substitute()
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
-    let l:hasAbortedInsert = changenr() <= s:originalChangeNr
-    let l:isMultiChangeInsert = (changenr() > s:originalChangeNr + 1)
-"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
     let l:changedText = getreg(s:register)
-    let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
-    if v:version == 703 && has('patch225') || v:version == 704 && ! has('patch261')
-	" XXX: Vim inserts \n == ^@ literally when the :s_c confirm flag is
-	" given. Convert to \r to work around this.
-	let s:newText = substitute(s:newText, '\n', '\r', 'g')
+    if s:isDelete
+	let l:hasAbortedInsert = 1
+	let s:newText = ''
+    else
+	let l:hasAbortedInsert = (changenr() <= s:originalChangeNr)
+	let l:isMultiChangeInsert = (changenr() > s:originalChangeNr + 1)
+	let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
+	if v:version == 703 && has('patch225') || v:version == 704 && ! has('patch261')
+	    " XXX: Vim inserts \n == ^@ literally when the :s_c confirm flag is
+	    " given. Convert to \r to work around this.
+	    let s:newText = substitute(s:newText, '\n', '\r', 'g')
+	endif
     endif
+"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
 "****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
@@ -391,12 +420,18 @@ function! ChangeGlobally#Substitute()
 	" use '[, '] instead of the . range.
 	let l:range = (l:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
     elseif s:range ==# 'buffer'
-	" We need to remove the trailing newline in the search pattern and
-	" anchor the search to the beginning and end of a line, so that only
-	" entire lines are substituted. Were we to alternatively append a \r to
-	" the replacement, the next line would be involved and the cursor
-	" misplaced.
-	let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '\$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	if s:isDelete
+	    " Keep the trailing newline so that the entire line(s) are deleted
+	    " without leaving an empty line behind.
+	    let s:substitution = ['^', l:search, '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	else
+	    " We need to remove the trailing newline in the search pattern and
+	    " anchor the search to the beginning and end of a line, so that only
+	    " entire lines are substituted. Were we to alternatively append a \r
+	    " to the replacement, the next line would be involved and the cursor
+	    " misplaced.
+	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '\$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	endif
 
 	let l:range = (s:count ? '.,$' : '%')
     else
