@@ -41,6 +41,9 @@ SEE ALSO								     *
 
 RELATED WORKS								     *
 
+- Without the plugin, you can use the |star| or |/| commands to search for the
+  existing text, then use |cgn| to change the next occurrence, then repeat
+  this with |.| as often as needed.
 - multichange.vim (vimscript #4309) uses a command :[range]MultiChange to
   modify the default c command to do an entire-word global substitution in the
   entire range.
@@ -231,7 +234,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2014 Ingo Karkat
+Copyright: (C) 2012-2015 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
