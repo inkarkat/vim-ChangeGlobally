@@ -8,7 +8,7 @@
 "   - visualrepeat.vim (vimscript #3848) autoload script (optional)
 "   - visualrepeat/reapply.vim autoload script (optional)
 "
-" Copyright: (C) 2012-2014 Ingo Karkat
+" Copyright: (C) 2012-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -398,10 +398,10 @@ function! ChangeGlobally#Substitute()
 	    let l:search = '\<' . l:search . '\>'
 	endif
 
-	" Check whether more than one substitution can be made in the line to
-	" determine whether the substitution should be applied to the line or
-	" beyond.
-	let l:isBeyondLineSubstitution = (s:isForceGlobal || s:CountMatches(l:search) == 1)
+	" Check whether more than all s:count / one substitution can be made in
+	" the line to determine whether the substitution should be applied to
+	" the line or beyond.
+	let l:isBeyondLineSubstitution = (s:isForceGlobal || (s:count ? s:count : 2) > s:CountMatches(l:search))
 
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
@@ -459,6 +459,7 @@ function! s:IndividualSubstitute( locationRestriction, substitutionArguments )
     let s:individualReplace.lines += (l:count ? 1 : 0)
 endfunction
 function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMapping )
+    let l:isBeyondLineSubstitution = 0
     " Re-apply the previous substitution (without new insert mode) to the visual
     " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
@@ -491,12 +492,22 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	" Avoid "E16: invalid range" when a too large [count] was given.
 	let l:range = (line('.') + v:count - 1 < line('$') ? '.,.+'.(v:count1 - 1) : '.,$')
     else
-	let l:range = (s:range ==# 'line' ? '' : '%')
+	if s:range ==# 'line'
+	    " Check whether more than all s:count / one substitution can be made in
+	    " the line to determine whether the substitution should be applied to
+	    " the line or beyond.
+	    let l:search = s:substitution[1]
+	    let l:isBeyondLineSubstitution = ((s:count ? s:count : 2) > s:CountMatches(l:search))
+
+	    let l:range = (l:isBeyondLineSubstitution ? '.,$' : '')
+	else
+	    let l:range = '%'
+	endif
     endif
 
     try
-	if s:count && s:range ==# 'line'
-	    " When we this is substitution inside a line, and the number of
+	if s:count && s:range ==# 'line' && ! l:isBeyondLineSubstitution
+	    " When this is a substitution inside a line, and the number of
 	    " matches is restricted, we need to apply the substitution to each
 	    " line separately in order to reset s:lastReplaceCnt. Otherwise, the
 	    " substitution count would peter out on the first line already, and
