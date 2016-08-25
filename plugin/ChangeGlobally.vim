@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - ChangeGlobally.vim autoload script
 "
-" Copyright: (C) 2012-2014 Ingo Karkat
+" Copyright: (C) 2012-2016 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.31.007	26-Aug-2016	Add g:ChangeGlobally_LimitToCurrentLineCount
+"				configuration.
 "   1.30.006	16-Jun-2014	ENH: Implement global delete as a specialization
 "				of an empty change.
 "				Add a:isDelete flag to
@@ -55,6 +57,9 @@ if ! exists('g:ChangeGlobally_GlobalCountThreshold')
 endif
 if ! exists('g:ChangeGlobally_ConfirmCount')
     let g:ChangeGlobally_ConfirmCount = 888
+endif
+if ! exists('g:ChangeGlobally_LimitToCurrentLineCount')
+    let g:ChangeGlobally_LimitToCurrentLineCount = 99
 endif
 
 
