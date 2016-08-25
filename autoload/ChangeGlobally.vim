@@ -14,6 +14,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.31.020	25-Aug-2016     BUG: When a {N}gc{motion} substitution is
+"				repeated, is it applied only to the current,
+"				single line, not for {N} instances in subsequent
+"				lines. Need to save s:isBeyondLineSubstitution
+"				and build the l:range accordingly in
+"				ChangeGlobally#Repeat().
 "   1.30.019	16-Jun-2014	ENH: Implement global delete as a specialization
 "				of an empty change.
 "				Add a:isDelete flag to
@@ -390,6 +396,7 @@ function! ChangeGlobally#Substitute()
 
     let l:locationRestriction = ''
     let s:locationRestriction = ''
+    let s:isBeyondLineSubstitution = 1
     if s:range ==# 'line'
 	if ! s:isVisualMode && ingo#search#buffer#IsKeywordMatch(l:changedText, l:changeStartVirtCol)
 	    " When the changed text is surrounded by keyword boundaries, only
@@ -398,10 +405,10 @@ function! ChangeGlobally#Substitute()
 	    let l:search = '\<' . l:search . '\>'
 	endif
 
-	" Check whether more than all s:count / one substitution can be made in
-	" the line to determine whether the substitution should be applied to
-	" the line or beyond.
-	let l:isBeyondLineSubstitution = (s:isForceGlobal || (s:count ? s:count : 2) > s:CountMatches(l:search))
+	" Check whether more than one substitution can be made in the line to
+	" determine whether the substitution should be applied to the line or
+	" beyond.
+	let s:isBeyondLineSubstitution = (s:isForceGlobal || s:CountMatches(l:search) == 1)
 
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
@@ -418,7 +425,7 @@ function! ChangeGlobally#Substitute()
 
 	" Note: The line may have been split into multiple lines by the editing;
 	" use '[, '] instead of the . range.
-	let l:range = (l:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
+	let l:range = (s:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
     elseif s:range ==# 'buffer'
 	if s:isDelete
 	    " Keep the trailing newline so that the entire line(s) are deleted
@@ -459,7 +466,6 @@ function! s:IndividualSubstitute( locationRestriction, substitutionArguments )
     let s:individualReplace.lines += (l:count ? 1 : 0)
 endfunction
 function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMapping )
-    let l:isBeyondLineSubstitution = 0
     " Re-apply the previous substitution (without new insert mode) to the visual
     " selection, [count] next lines, or the range of the previous substitution.
     if a:isVisualMode
@@ -492,21 +498,17 @@ function! ChangeGlobally#Repeat( isVisualMode, repeatMapping, visualrepeatMappin
 	" Avoid "E16: invalid range" when a too large [count] was given.
 	let l:range = (line('.') + v:count - 1 < line('$') ? '.,.+'.(v:count1 - 1) : '.,$')
     else
-	if s:range ==# 'line'
-	    " Check whether more than all s:count / one substitution can be made in
-	    " the line to determine whether the substitution should be applied to
-	    " the line or beyond.
-	    let l:search = s:substitution[1]
-	    let l:isBeyondLineSubstitution = ((s:count ? s:count : 2) > s:CountMatches(l:search))
-
-	    let l:range = (l:isBeyondLineSubstitution ? '.,$' : '')
-	else
-	    let l:range = '%'
-	endif
+	let l:range = (s:range ==# 'line' ?
+	\   (s:isBeyondLineSubstitution ?
+	\   '.,$' :
+	\   ''
+	\   ) :
+	\   '%'
+	\)
     endif
 
     try
-	if s:count && s:range ==# 'line' && ! l:isBeyondLineSubstitution
+	if s:count && s:range ==# 'line' && ! s:isBeyondLineSubstitution
 	    " When this is a substitution inside a line, and the number of
 	    " matches is restricted, we need to apply the substitution to each
 	    " line separately in order to reset s:lastReplaceCnt. Otherwise, the
