@@ -14,6 +14,16 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.31.021	26-Aug-2016	Default to applying {N}gc{motion} beyond the
+"				current line, unless a count of
+"				g:ChangeGlobally_LimitToCurrentLineCount is
+"				given. Especially with 'hlsearch', one often can
+"				see the (low) number of substitutions in the few
+"				following lines, and it's comfortable to be able
+"				to change them all in one fell swoop, instead of
+"				applying to just the current line and then
+"				having to repeat over the next few lines with
+"				[count]. command.
 "   1.31.020	25-Aug-2016     BUG: When a {N}gc{motion} substitution is
 "				repeated, is it applied only to the current,
 "				single line, not for {N} instances in subsequent
@@ -405,10 +415,16 @@ function! ChangeGlobally#Substitute()
 	    let l:search = '\<' . l:search . '\>'
 	endif
 
-	" Check whether more than one substitution can be made in the line to
-	" determine whether the substitution should be applied to the line or
-	" beyond.
-	let s:isBeyondLineSubstitution = (s:isForceGlobal || s:CountMatches(l:search) == 1)
+	" Check whether more than all s:count / one substitution can be made in
+	" the line to determine whether the substitution should be applied to
+	" the line or beyond. (Unless the special
+	" g:ChangeGlobally_LimitToCurrentLineCount is given.)
+	let s:isBeyondLineSubstitution = (s:isForceGlobal || (
+	\   (g:ChangeGlobally_LimitToCurrentLineCount != 0 && s:count == g:ChangeGlobally_LimitToCurrentLineCount) ?
+	\       (s:CountMatches(l:search) == 1) :
+	\       (s:count ? s:count : 2) > s:CountMatches(l:search)
+	\   )
+	\)
 
 	if s:count
 	    " When a [count] was given, only apply the substitution [count]
