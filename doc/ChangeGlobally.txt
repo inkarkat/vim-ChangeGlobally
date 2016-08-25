@@ -194,6 +194,12 @@ IDEAS							*ChangeGlobally-ideas*
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
+1.31	RELEASEME
+- BUG: When a {N}gc{motion} substitution is repeated, is it applied only to
+  the current, single line, not for {N} instances in subsequent lines. Need to
+  save s:isBeyondLineSubstitution and build the l:range accordingly in
+  ChangeGlobally#Repeat().
+
 1.30	12-Dec-2014
 - ENH: Implement global delete (gx{motion}, gxx) as a specialization of an
   empty change.
@@ -234,7 +240,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2015 Ingo Karkat
+Copyright: (C) 2012-2016 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
