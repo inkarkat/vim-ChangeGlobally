@@ -9,6 +9,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.30.006	16-Jun-2014	ENH: Implement global delete as a specialization
+"				of an empty change.
+"				Add a:isDelete flag to
+"				ChangeGlobally#SetParameters().
+"				Define duplicate delete mappings, with a default
+"				mapping to gx instead of gc.
 "   1.21.005	22-Apr-2014	Add g:ChangeGlobally_ConfirmCount configuration.
 "   1.20.004	18-Apr-2013	Use optional visualrepeat#reapply#VisualMode()
 "				for normal mode repeat of a visual mapping.
@@ -55,13 +61,13 @@ endif
 "- mappings --------------------------------------------------------------------
 
 nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
-nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(v:count, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR><SID>(ChangeGloballyOperator)
+nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR><SID>(ChangeGloballyOperator)
 if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
     nmap gc <Plug>(ChangeGloballyOperator)
 endif
 nnoremap <silent> <Plug>(ChangeGloballyLine)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#SetParameters(0, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
+\call ChangeGlobally#SetParameters(0, 0, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
 \call ChangeGlobally#Operator('V')<CR>
 if ! hasmapto('<Plug>(ChangeGloballyLine)', 'n')
@@ -70,10 +76,33 @@ endif
 
 vnoremap <silent> <Plug>(ChangeGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\call ChangeGlobally#SetParameters(v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
+\call ChangeGlobally#SetParameters(0, v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \call ChangeGlobally#Operator(visualmode())<CR>
 if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'x')
     xmap gc <Plug>(ChangeGloballyVisual)
+endif
+
+
+
+nnoremap <silent> <script> <Plug>(DeleteGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR><SID>(ChangeGloballyOperator)
+if ! hasmapto('<Plug>(DeleteGloballyOperator)', 'n')
+    nmap gx <Plug>(DeleteGloballyOperator)
+endif
+nnoremap <silent> <Plug>(DeleteGloballyLine)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#SetParameters(1, 0, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
+\execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
+\call ChangeGlobally#Operator('V')<CR>
+if ! hasmapto('<Plug>(DeleteGloballyLine)', 'n')
+    nmap gxx <Plug>(DeleteGloballyLine)
+endif
+
+vnoremap <silent> <Plug>(DeleteGloballyVisual)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#SetParameters(1, v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
+\call ChangeGlobally#Operator(visualmode())<CR>
+if ! hasmapto('<Plug>(DeleteGloballyVisual)', 'x')
+    xmap gx <Plug>(DeleteGloballyVisual)
 endif
 
 
