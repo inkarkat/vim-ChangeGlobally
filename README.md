@@ -211,7 +211,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 1.31    RELEASEME
+##### 1.31    03-Nov-2018
 - BUG: When a {N}gc{motion} substitution is repeated, is it applied only to
   the current, single line, not for {N} instances in subsequent lines.
   ChangeGlobally#Repeat().
