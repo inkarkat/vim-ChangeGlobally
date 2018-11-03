@@ -1,0 +1,20 @@
+    // A block
+    // of stuff
+A[lang=de]:after,    CITE[lang=de]:after,    SPAN[lang=de]:after    { content: " "url("../images/lang.de.gif"); }
+A[lang=en]:after,    CITE[lang=en]:after,    SPAN[lang=en]:after    { content: " "url("../images/lang.en.gif"); }
+EOB
+
+    // A block
+    // of stuff
+H1[lang=de]:after,    H2[lang=de]:after,    H3[lang=de]:after    { content: " "url("../images/lang.de.gif"); }
+H1[lang=en]:after,    H2[lang=en]:after,    H3[lang=en]:after    { content: " "url("../images/lang.en.gif"); }
+EOB
+
+	// A block
+	// of stuff
+P[lang=de]:before,                         DIV[lang=de]:before    { content: url("../images/lang.de.gif"); }
+P[lang=en]:before,                         DIV[lang=en]:before    { content: url("../images/lang.en.gif"); }
+EOB
+
+    // Another block
+    MyEOB

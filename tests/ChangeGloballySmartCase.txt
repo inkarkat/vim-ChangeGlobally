@@ -1,0 +1,29 @@
+    // A block
+    // of stuff
+A[lang=de]:to_be,    CITE[lang=de]:toBe,    SPAN[lang=de]:TO-BE    { content: " "url("../images/lang.de.gif"); }
+A[lang=en]:to_be,    CITE[lang=en]:toBe,    SPAN[lang=en]:TO-BE    { content: " "url("../images/lang.en.gif"); }
+A[lang=en-GB]:to_be, CITE[lang=en-GB]:toBe, SPAN[lang=en-GB]:TO-BE { content: " "url("../images/lang.gb.gif"); }
+A[lang=jp]:to_be,    CITE[lang=jp]:toBe,    SPAN[lang=jp]:TO-BE    { content: " "url("../images/lang.jp.gif"); }
+A[lang=en-US]:to_be, CITE[lang=en-US]:toBe, SPAN[lang=en-US]:TO-BE { content: " "url("../images/lang.us.gif"); }
+EOB
+
+    // A block
+    // of stuff
+H1[lang=de]:after,    H2[Lang=de]:after,    H3[lang=de]:after    { content: " "url("../images/LANG.de.gif"); }
+H1[lang=en]:after,    H2[Lang=en]:after,    H3[lang=en]:after    { content: " "url("../images/LANG.en.gif"); }
+H1[lang=en-GB]:after, H2[Lang=en-GB]:after, H3[lang=en-GB]:after { content: " "url("../images/LANG.gb.gif"); }
+H1[lang=jp]:after,    H2[Lang=jp]:after,    H3[lang=jp]:after    { content: " "url("../images/LANG.jp.gif"); }
+H1[lang=en-US]:after, H2[Lang=en-US]:after, H3[lang=en-US]:after { content: " "url("../images/LANG.us.gif"); }
+EOB
+
+	// A block
+	// of stuff
+P[lang=de]:before,                         DIV[lang=de]:before    { content: url("../images/lang.de.gif"); }
+P[lang=en]:before,                         DIV[lang=en]:before    { content: url("../images/lang.en.gif"); }
+P[lang=en-GB]:before,                      DIV[lang=en-GB]:before { content: url("../images/lang.gb.gif"); }
+P[lang=jp]:before,                         DIV[lang=jp]:before    { content: url("../images/lang.jp.gif"); }
+P[lang=en-US]:before,                      DIV[lang=en-US]:before { content: url("../images/lang.us.gif"); }
+EOB
+
+    // Another block
+    MyEOB
