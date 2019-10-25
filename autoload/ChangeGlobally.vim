@@ -136,6 +136,59 @@ function! ChangeGlobally#SourceOperator( type )
     " repeat there.
     call s:ArmInsertMode(l:search, l:replace)
 endfunction
+function! ChangeGlobally#CwordSourceTargetOperator( type )
+    let s:range = 'area'
+    " TODO: Capture area.
+    " if a:type ==# 'char'
+    " elseif a:type ==# 'line'
+    " elseif a:type ==# 'block'
+    " endif
+
+    " TODO: Check for keyword under cursor, try jump, error if none.
+    let l:isAtEndOfLine = (search('\%#\k\+$', 'cnW', line('.')) > 0)
+    " TODO: Special case for "_
+    execute 'normal! "' . s:register . 'daw'
+
+
+    let l:changedText = getreg(s:register)
+    let l:search = '\V\C\<' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g') . '\>'
+    " Only apply the substitution [count] times. We do this via a
+    " replace-expression that counts the number of replacements; unlike a
+    " repeated single substitution, this avoids the issue of re-replacing.
+    " We also do this for the global (line / buffer) substitution without a
+    " [count] in order to determine whether there actually were other matches.
+    " If not, we indicate this with a beep.
+    " Note: We cannot simply pass in the replacement via string(s:newText); it
+    " may contain the / substitution separator, which must not appear at all in
+    " the expression. Therefore, we store this in a variable and directly
+    " reference it from ChangeGlobally#CountedReplace().
+    let l:replace = '\=ChangeGlobally#CountedAreaReplace()'
+
+    if s:isDelete
+	" For a global deletion, we don't need to set up and go to insert mode;
+	" just record what got deleted, and reapply that.
+
+	" Not needed for deletion.
+	let s:originalChangeNr = -1
+	let s:insertStartPos = [0,0]
+
+	call ChangeGlobally#Substitute(l:search, l:replace)
+	return
+    endif
+
+    let s:originalChangeNr = changenr()
+    let s:insertStartPos = getpos("'[")[1:2]
+    if l:isAtEndOfLine
+	startinsert!
+    else
+	startinsert
+    endif
+
+    " Don't set up the repeat; we're not done yet. We now install an autocmd,
+    " and the ChangeGlobally#Substitute() will conclude the command, and set the
+    " repeat there.
+    call s:ArmInsertMode(l:search, l:replace)
+endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
     let &opfunc = a:opfunc
 
@@ -195,6 +248,16 @@ function! s:LastReplaceInit()
 endfunction
 function! ChangeGlobally#CountedReplace()
     if ! s:count || s:lastReplaceCnt < s:count
+	let s:lastReplaceCnt += 1
+	let s:lastReplacementLnum = line('.')
+	let s:lastReplacementLines[line('.')] = 1
+	return s:newText
+    else
+	return submatch(0)
+    endif
+endfunction
+function! ChangeGlobally#CountedAreaReplace()
+    if (! s:count || s:lastReplaceCnt < s:count) && line('.') > 10 && virtcol('.') > 20 " TODO
 	let s:lastReplaceCnt += 1
 	let s:lastReplacementLnum = line('.')
 	let s:lastReplacementLines[line('.')] = 1
@@ -333,6 +396,9 @@ function! ChangeGlobally#Substitute( search, replace )
 	endif
 
 	let l:range = (s:count ? '.,$' : '%')
+    elseif s:range ==# 'area'
+	let s:substitution = [l:search, '/', l:replace, '/', 'g' . (s:isConfirm ? 'c' : '')]
+	let l:range = '%'
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif

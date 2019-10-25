@@ -78,6 +78,21 @@ endif
 
 
 
+nnoremap <silent> <expr> <SID>(ChangeCwordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#CwordSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeCwordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeCwordRepeat)", "\<lt>Plug>(ChangeCwordVisualRepeat)")<CR><SID>(ChangeCwordOperator)
+if ! hasmapto('<Plug>(ChangeCwordOperator)', 'n')
+    nmap gco <Plug>(ChangeCwordOperator)
+endif
+
+nnoremap <silent> <script> <Plug>(DeleteCwordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeCwordRepeat)", "\<lt>Plug>(ChangeCwordVisualRepeat)")<CR><SID>(ChangeCwordOperator)
+if ! hasmapto('<Plug>(DeleteCwordOperator)', 'n')
+    nmap gxo <Plug>(DeleteCwordOperator)
+endif
+" TODO: <Plug>(ChangeCwordRepeat), <Plug>(ChangeCwordVisualRepeat)
+
+
+
+
 nnoremap <silent> <Plug>(ChangeGloballyRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#Repeat(0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
