@@ -8,7 +8,7 @@
 "   - visualrepeat.vim (vimscript #3848) autoload script (optional)
 "   - visualrepeat/reapply.vim autoload script (optional)
 "
-" Copyright: (C) 2012-2018 Ingo Karkat
+" Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -36,7 +36,7 @@ function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMap
 	unlet! s:SubstitutionHook
     endif
 endfunction
-function! s:ArmInsertMode()
+function! s:ArmInsertMode( replace )
     " Autocmds may interfere with the plugin when they temporarily leave insert
     " mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until
     " the user is done inserting.
@@ -52,7 +52,7 @@ function! s:ArmInsertMode()
     endif
 
     augroup ChangeGlobally
-	autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute()
+	execute printf('autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute(%s)', string(a:replace))
     augroup END
 endfunction
 function! ChangeGlobally#UnarmInsertMode()
@@ -96,6 +96,19 @@ function! ChangeGlobally#Operator( type )
     " TODO: Special case for "_
     execute 'normal! "' . s:register . l:deleteCommand
 
+
+    " Only apply the substitution [count] times. We do this via a
+    " replace-expression that counts the number of replacements; unlike a
+    " repeated single substitution, this avoids the issue of re-replacing.
+    " We also do this for the global (line / buffer) substitution without a
+    " [count] in order to determine whether there actually were other matches.
+    " If not, we indicate this with a beep.
+    " Note: We cannot simply pass in the replacement via string(s:newText); it
+    " may contain the / substitution separator, which must not appear at all in
+    " the expression. Therefore, we store this in a variable and directly
+    " reference it from ChangeGlobally#CountedReplace().
+    let l:replace = '\=ChangeGlobally#CountedReplace()'
+
     if s:isDelete
 	" For a global deletion, we don't need to set up and go to insert mode;
 	" just record what got deleted, and reapply that.
@@ -104,7 +117,7 @@ function! ChangeGlobally#Operator( type )
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
-	call ChangeGlobally#Substitute()
+	call ChangeGlobally#Substitute(l:replace)
 	return
     endif
 
@@ -119,7 +132,7 @@ function! ChangeGlobally#Operator( type )
     " Don't set up the repeat; we're not done yet. We now install an autocmd,
     " and the ChangeGlobally#Substitute() will conclude the command, and set the
     " repeat there.
-    call s:ArmInsertMode()
+    call s:ArmInsertMode(l:replace)
 endfunction
 function! ChangeGlobally#OperatorExpression()
     set opfunc=ChangeGlobally#Operator
@@ -220,7 +233,7 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
 
     return s:lastReplaceCnt
 endfunction
-function! ChangeGlobally#Substitute()
+function! ChangeGlobally#Substitute( replace )
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
     let l:changedText = getreg(s:register)
@@ -241,18 +254,7 @@ function! ChangeGlobally#Substitute()
 "****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
-
-    " Only apply the substitution [count] times. We do this via a
-    " replace-expression that counts the number of replacements; unlike a
-    " repeated single substitution, this avoids the issue of re-replacing.
-    " We also do this for the global (line / buffer) substitution without a
-    " [count] in order to determine whether there actually were other matches.
-    " If not, we indicate this with a beep.
-    " Note: We cannot simply pass in the replacement via string(s:newText); it
-    " may contain the / substitution separator, which must not appear at all in
-    " the expression. Therefore, we store this in a variable and directly
-    " reference it from ChangeGlobally#CountedReplace().
-    let l:replace = '\=ChangeGlobally#CountedReplace()'
+    let l:replace = a:replace
 
 
     " To turn the change and following substitutions into a single change, first
