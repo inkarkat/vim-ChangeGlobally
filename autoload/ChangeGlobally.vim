@@ -36,7 +36,7 @@ function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMap
 	unlet! s:SubstitutionHook
     endif
 endfunction
-function! s:ArmInsertMode( replace )
+function! s:ArmInsertMode( search, replace )
     " Autocmds may interfere with the plugin when they temporarily leave insert
     " mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until
     " the user is done inserting.
@@ -52,7 +52,7 @@ function! s:ArmInsertMode( replace )
     endif
 
     augroup ChangeGlobally
-	execute printf('autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute(%s)', string(a:replace))
+	execute printf('autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute(%s, %s)', string(a:search), string(a:replace))
     augroup END
 endfunction
 function! ChangeGlobally#UnarmInsertMode()
@@ -97,6 +97,8 @@ function! ChangeGlobally#SourceOperator( type )
     execute 'normal! "' . s:register . l:deleteCommand
 
 
+    let l:changedText = getreg(s:register)
+    let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
     " repeated single substitution, this avoids the issue of re-replacing.
@@ -117,7 +119,7 @@ function! ChangeGlobally#SourceOperator( type )
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
-	call ChangeGlobally#Substitute(l:replace)
+	call ChangeGlobally#Substitute(l:search, l:replace)
 	return
     endif
 
@@ -132,7 +134,7 @@ function! ChangeGlobally#SourceOperator( type )
     " Don't set up the repeat; we're not done yet. We now install an autocmd,
     " and the ChangeGlobally#Substitute() will conclude the command, and set the
     " repeat there.
-    call s:ArmInsertMode(l:replace)
+    call s:ArmInsertMode(l:search, l:replace)
 endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
     let &opfunc = a:opfunc
@@ -233,10 +235,9 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
 
     return s:lastReplaceCnt
 endfunction
-function! ChangeGlobally#Substitute( replace )
+function! ChangeGlobally#Substitute( search, replace )
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
-    let l:changedText = getreg(s:register)
     if s:isDelete
 	let l:hasAbortedInsert = 1
 	let s:newText = ''
@@ -251,22 +252,22 @@ function! ChangeGlobally#Substitute( replace )
 	endif
     endif
 "****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
-"****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
+"****D echomsg '**** subst' string(a:search) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
-    let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
+    let l:search = a:search
     let l:replace = a:replace
 
 
     " To turn the change and following substitutions into a single change, first
     " undo the deletion and insertion. (I couldn't get them combined with
     " :undojoin across the :startinsert.)
-    " This also solves the special case when l:changedText is contained in
+    " This also solves the special case when the changed text is contained in
     " s:newText; without the undo, we would need to avoid re-applying the
     " substitution over the just changed part of the line.
     if ! l:hasAbortedInsert
 	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
     endif
-    silent undo " the deletion of l:changedText
+    silent undo " the deletion of the changed text
 
 
     if exists('s:SubstitutionHook')
@@ -283,7 +284,7 @@ function! ChangeGlobally#Substitute( replace )
     let s:locationRestriction = ''
     let s:isBeyondLineSubstitution = 1
     if s:range ==# 'line'
-	if ! s:isVisualMode && ingo#search#buffer#IsKeywordMatch(l:changedText, l:changeStartVirtCol)
+	if ! s:isVisualMode && ingo#search#buffer#IsKeywordMatch(l:search, l:changeStartVirtCol)
 	    " When the changed text is surrounded by keyword boundaries, only
 	    " perform keyword replacements to avoid replacing other matches
 	    " inside keywords (e.g. "in" inside "ring").
