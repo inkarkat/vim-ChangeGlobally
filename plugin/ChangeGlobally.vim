@@ -3,7 +3,7 @@
 " DEPENDENCIES:
 "   - ChangeGlobally.vim autoload script
 "
-" Copyright: (C) 2012-2018 Ingo Karkat
+" Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -31,7 +31,7 @@ endif
 
 "- mappings --------------------------------------------------------------------
 
-nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression()
+nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SourceOperator')
 nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR><SID>(ChangeGloballyOperator)
 if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
     nmap gc <Plug>(ChangeGloballyOperator)
@@ -40,7 +40,7 @@ nnoremap <silent> <Plug>(ChangeGloballyLine)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#SetParameters(0, 0, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
-\call ChangeGlobally#Operator('V')<CR>
+\call ChangeGlobally#SourceOperator('V')<CR>
 if ! hasmapto('<Plug>(ChangeGloballyLine)', 'n')
     nmap gcc <Plug>(ChangeGloballyLine)
 endif
@@ -48,7 +48,7 @@ endif
 vnoremap <silent> <Plug>(ChangeGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#SetParameters(0, v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
-\call ChangeGlobally#Operator(visualmode())<CR>
+\call ChangeGlobally#SourceOperator(visualmode())<CR>
 if ! hasmapto('<Plug>(ChangeGloballyVisual)', 'x')
     xmap gc <Plug>(ChangeGloballyVisual)
 endif
@@ -63,7 +63,7 @@ nnoremap <silent> <Plug>(DeleteGloballyLine)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#SetParameters(1, 0, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
 \execute 'normal! V' . v:count1 . "_\<lt>Esc>"<Bar>
-\call ChangeGlobally#Operator('V')<CR>
+\call ChangeGlobally#SourceOperator('V')<CR>
 if ! hasmapto('<Plug>(DeleteGloballyLine)', 'n')
     nmap gxx <Plug>(DeleteGloballyLine)
 endif
@@ -71,7 +71,7 @@ endif
 vnoremap <silent> <Plug>(DeleteGloballyVisual)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#SetParameters(1, v:count, 1, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<Bar>
-\call ChangeGlobally#Operator(visualmode())<CR>
+\call ChangeGlobally#SourceOperator(visualmode())<CR>
 if ! hasmapto('<Plug>(DeleteGloballyVisual)', 'x')
     xmap gx <Plug>(DeleteGloballyVisual)
 endif

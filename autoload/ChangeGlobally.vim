@@ -63,7 +63,7 @@ function! ChangeGlobally#UnarmInsertMode()
 	unlet s:save_eventignore
     endif
 endfunction
-function! ChangeGlobally#Operator( type )
+function! ChangeGlobally#SourceOperator( type )
     let l:isAtEndOfLine = 0
 
     if a:type ==# 'v'
@@ -134,8 +134,8 @@ function! ChangeGlobally#Operator( type )
     " repeat there.
     call s:ArmInsertMode(l:replace)
 endfunction
-function! ChangeGlobally#OperatorExpression()
-    set opfunc=ChangeGlobally#Operator
+function! ChangeGlobally#OperatorExpression( opfunc )
+    let &opfunc = a:opfunc
 
     let l:keys = 'g@'
 
