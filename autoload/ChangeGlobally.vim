@@ -137,15 +137,27 @@ function! ChangeGlobally#SourceOperator( type )
     " repeat there.
     call s:ArmInsertMode(l:search, l:replace)
 endfunction
+function! s:GoToSource( sourcePattern ) abort
+    call setpos('.', s:pos)
+    " Like * and <cword>, search forward within the current line if not yet on
+    " the source.
+    if search(a:sourcePattern, 'cW', line('.')) > 0
+	return [1, (search('\%#' . a:sourcePattern . '$', 'cnW', line('.')) > 0)]
+    else
+	return [0, 0]
+    endif
+endfunction
 function! ChangeGlobally#CwordSourceTargetOperator( type )
     let s:range = 'area'
     let s:area = ingo#change#virtcols#Get(a:type)
+    let [l:isFound, l:isAtEndOfLine] = s:GoToSource('\k\+')
+    if ! l:isFound
+	call ingo#msg#ErrorMsg('No string under cursor')
+	return
+    endif
 
-    " TODO: Check for keyword under cursor, try jump, error if none.
-    call setpos('.', s:pos)
-    let l:isAtEndOfLine = (search('\%#\k\+$', 'cnW', line('.')) > 0)
     " TODO: Special case for "_
-    execute 'normal! "' . s:register . 'daw'
+    execute 'normal! "' . s:register . 'diw'
 
 
     let l:changedText = getreg(s:register)
