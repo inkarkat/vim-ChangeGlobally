@@ -423,7 +423,7 @@ function! ChangeGlobally#Substitute( search, replace )
 	let l:range = (s:count ? '.,$' : '%')
     elseif s:range ==# 'area'
 	let s:substitution = [l:search, '/', l:replace, '/', 'g' . (s:isConfirm ? 'c' : '')]
-	let l:range = '%'
+	let l:range = s:area.startLnum . ',' . s:area.endLnum
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif
