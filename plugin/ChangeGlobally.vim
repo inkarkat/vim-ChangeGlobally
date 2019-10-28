@@ -77,22 +77,6 @@ if ! hasmapto('<Plug>(DeleteGloballyVisual)', 'x')
 endif
 
 
-
-nnoremap <silent> <expr> <SID>(ChangeCwordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#CwordSourceTargetOperator')
-nnoremap <silent> <script> <Plug>(ChangeCwordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeCwordRepeat)", "\<lt>Plug>(ChangeCwordVisualRepeat)")<CR><SID>(ChangeCwordOperator)
-if ! hasmapto('<Plug>(ChangeCwordOperator)', 'n')
-    nmap gco <Plug>(ChangeCwordOperator)
-endif
-
-nnoremap <silent> <script> <Plug>(DeleteCwordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeCwordRepeat)", "\<lt>Plug>(ChangeCwordVisualRepeat)")<CR><SID>(ChangeCwordOperator)
-if ! hasmapto('<Plug>(DeleteCwordOperator)', 'n')
-    nmap gxo <Plug>(DeleteCwordOperator)
-endif
-" TODO: <Plug>(ChangeCwordRepeat), <Plug>(ChangeCwordVisualRepeat)
-
-
-
-
 nnoremap <silent> <Plug>(ChangeGloballyRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \call ChangeGlobally#Repeat(0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
@@ -115,6 +99,38 @@ nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \execute 'normal!' ChangeGlobally#VisualMode()<Bar>
 \call ChangeGlobally#Repeat(1, "\<lt>Plug>(ChangeGloballyVisualRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR>
+
+
+
+
+nnoremap <silent> <expr> <SID>(ChangeCwordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#CwordSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeCwordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeCwordOperator)
+if ! hasmapto('<Plug>(ChangeCwordOperator)', 'n')
+    nmap gco <Plug>(ChangeCwordOperator)
+endif
+
+nnoremap <silent> <script> <Plug>(DeleteCwordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeCwordOperator)
+if ! hasmapto('<Plug>(DeleteCwordOperator)', 'n')
+    nmap gxo <Plug>(DeleteCwordOperator)
+endif
+
+
+" Vim is able to repeat the g@ on its own; however, we need to re-use the
+" previous source text and just repeat the substitute on the new area, so a
+" different opfunc just runs pieces of the logic.
+nnoremap <silent> <Plug>(ChangeAreaRepeat)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\let &opfunc = 'ChangeGlobally#RepeatTargetOperator'<Bar>normal! .<CR>
+" Repeat in visual mode applies the same substitution to the selection.
+vnoremap <silent> <Plug>(ChangeAreaVisualRepeat)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\call ChangeGlobally#VisualRepeat()<CR>
+" After a visual mode repeat has been made, normal mode repeats target a
+" same-sized selection at the current position.
+nnoremap <silent> <Plug>(ChangeAreaVisualRepeat)
+\ :<C-u>call setline('.', getline('.'))<Bar>
+\execute 'normal!' ChangeGlobally#VisualMode()<Bar>
+\call ChangeGlobally#VisualRepeat()<CR>
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

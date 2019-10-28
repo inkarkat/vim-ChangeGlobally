@@ -199,6 +199,29 @@ function! ChangeGlobally#CwordSourceTargetOperator( type )
     " repeat there.
     call s:ArmInsertMode(l:search, l:replace)
 endfunction
+function! ChangeGlobally#RepeatTargetOperator( type )
+    let s:range = 'area'
+    let s:area = ingo#change#virtcols#Get(a:type)
+
+    let l:range = s:area.startLnum . ',' . s:area.endLnum
+    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+    endif
+endfunction
+function! ChangeGlobally#VisualRepeat()
+    let s:range = 'area'
+    let s:area = ingo#selection#virtcols#Get()
+
+    let l:range = s:area.startLnum . ',' . s:area.endLnum
+    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+    endif
+
+    " From now on, normal mode repeat does not target the g@ area, but a
+    " same-sized visual selection. To obtain that, we have to change the repeat
+    " mapping.
+    silent! call repeat#set("\<Plug>(ChangeAreaVisualRepeat)")
+endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
     let &opfunc = a:opfunc
 
