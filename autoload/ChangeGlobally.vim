@@ -255,6 +255,7 @@ function! s:LastReplaceInit()
     let s:lastReplaceCnt = 0
     let s:lastReplacementLnum = line('.')
     let s:lastReplacementLines = {}
+    let s:lastReplacementDecisions = []
 endfunction
 function! ChangeGlobally#CountedReplace()
     if ! s:count || s:lastReplaceCnt < s:count
@@ -286,10 +287,19 @@ function! ChangeGlobally#CountedAreaReplace()
 	let s:lastReplaceCnt += 1
 	let s:lastReplacementLnum = line('.')
 	let s:lastReplacementLines[line('.')] = 1
-	return s:newText
+
+	" Doing the replacement now would affect all further area inclusion
+	" tests. Therefore, just record the decision now and do the actual
+	" replacement in a second pass in
+	" ChangeGlobally#AreaReplaceSecondPass().
+	call add(s:lastReplacementDecisions, 1)
     else
-	return submatch(0)
+	call add(s:lastReplacementDecisions, 0)
     endif
+    return submatch(0)
+endfunction
+function! ChangeGlobally#AreaReplaceSecondPass() abort
+    return (remove(s:lastReplacementDecisions, 0) ? s:newText : submatch(0))
 endfunction
 function! s:Report( replaceCnt, replacementLines )
     if a:replacementLines >= &report
@@ -314,6 +324,20 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
 	" Because of this, the "N substitutions on M lines" will also be wrong.
 	" We have to suppress the original message and emulate that, too.
 	silent execute l:substitutionCommand
+
+	if s:lastReplaceCnt > 0 && a:substitutionArguments[4] ==# '\=ChangeGlobally#CountedAreaReplace()'
+	    " The area replacement only records the locations on the first pass,
+	    " to avoid modifying the size of the area. (We cannot use the trick
+	    " of doing the replacements from last to first with :substitute.)
+	    " Do the replacements only in a second pass (this time without the
+	    " :s_c confirm flag).
+	    let l:secondPassSubstitutionArguments = copy(a:substitutionArguments)
+	    let l:secondPassSubstitutionArguments[4] = '\=ChangeGlobally#AreaReplaceSecondPass()'
+	    let l:secondPassSubstitutionArguments[-1] = ingo#str#trd(l:secondPassSubstitutionArguments[-1], 'c')
+	    let l:substitutionCommand = a:range . 'substitute/' . a:localRestriction . join(l:secondPassSubstitutionArguments, '') . 'e'
+	    silent execute l:substitutionCommand
+	endif
+
 	execute 'keepjumps normal!' s:lastReplacementLnum . 'G^'
 
 	call s:Report(s:lastReplaceCnt, len(s:lastReplacementLines))
@@ -422,7 +446,7 @@ function! ChangeGlobally#Substitute( search, replace )
 
 	let l:range = (s:count ? '.,$' : '%')
     elseif s:range ==# 'area'
-	let s:substitution = [l:search, '/', l:replace, '/', 'g' . (s:isConfirm ? 'c' : '')]
+	let s:substitution = ['', l:search, '', '/', l:replace, '/', 'g' . (s:isConfirm ? 'c' : '')]
 	let l:range = s:area.startLnum . ',' . s:area.endLnum
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
