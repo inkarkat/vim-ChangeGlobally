@@ -121,6 +121,26 @@ USAGE							*ChangeGlobally-usage*
 ["x]gxx			Delete [count] lines [into register x] and apply the
 			deletion globally.
 
+
+									 *gco*
+[N]["x]gco{motion}	Delete the current word [into register x] and start
+			inserting. After exiting insert mode, that text
+			substitution is applied to all / [N] occurrences
+			inside {motion} text.
+									 *gxo*
+[N]["x]gxo{motion}	Delete the current word [into register x] and apply
+			the deletion to all / [N] occurrences inside {motion}
+			text.
+							   *ChangeArea-repeat*
+			When any of these commands is repeated via |.|, the
+			previous substitution of the same source text is
+			re-applied to {motion} (relative to the current
+			position now) again.
+			With the |visualrepeat.vim| plugin, you can also
+			directly reapply to the current selection instead of
+			the previous {motion}. Further repeats will then
+			target a selection of the same size as before.
+
 EXAMPLE						      *ChangeGlobally-example*
 
 Suppose you have a line like this, and you want to change "de" to "en":
@@ -152,7 +172,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					 *ChangeGlobally-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.011 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.040 or
   higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - visualrepeat.vim (vimscript #3848) plugin (version 2.00 or higher; optional)
@@ -218,6 +238,10 @@ below).
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
+2.00	RELEASEME
+- ENH: Add TODO
+  *** You need to update to ingo-library (vimscript #4433) version 1.040! ***
+
 1.31	03-Nov-2018
 - BUG: When a {N}gc{motion} substitution is repeated, is it applied only to
   the current, single line, not for {N} instances in subsequent lines.
@@ -269,7 +293,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2018 Ingo Karkat
+Copyright: (C) 2012-2019 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
