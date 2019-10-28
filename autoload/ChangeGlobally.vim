@@ -16,6 +16,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
+    let s:pos = getpos('.')
     let s:isDelete = a:isDelete
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
@@ -138,13 +139,10 @@ function! ChangeGlobally#SourceOperator( type )
 endfunction
 function! ChangeGlobally#CwordSourceTargetOperator( type )
     let s:range = 'area'
-    " TODO: Capture area.
-    " if a:type ==# 'char'
-    " elseif a:type ==# 'line'
-    " elseif a:type ==# 'block'
-    " endif
+    let s:area = ingo#change#virtcols#Get(a:type)
 
     " TODO: Check for keyword under cursor, try jump, error if none.
+    call setpos('.', s:pos)
     let l:isAtEndOfLine = (search('\%#\k\+$', 'cnW', line('.')) > 0)
     " TODO: Special case for "_
     execute 'normal! "' . s:register . 'daw'
@@ -256,8 +254,23 @@ function! ChangeGlobally#CountedReplace()
 	return submatch(0)
     endif
 endfunction
+function! s:IsInsideArea( lnum, startVirtCol, endVirtCol ) abort
+    if s:area.mode ==# 'v'
+	return
+	\   (a:lnum > s:area.startLnum && a:lnum < s:area.endLnum) ||
+	\   (a:lnum == s:area.startLnum && a:startVirtCol >= s:area.startVirtCol) ||
+	\   (a:lnum == s:area.endLnum && a:endVirtCol <= s:area.effectiveEndVirtCol)
+    elseif s:area.mode ==# 'V'
+	return (a:lnum >= s:area.startLnum && a:lnum <= s:area.endLnum)
+    else
+	return
+	\   (a:lnum >= s:area.startLnum && a:lnum <= s:area.endLnum) &&
+	\   (a:startVirtCol >= s:area.startVirtCol && a:endVirtCol <= s:area.effectiveEndVirtCol)
+    endif
+endfunction
 function! ChangeGlobally#CountedAreaReplace()
-    if (! s:count || s:lastReplaceCnt < s:count) && line('.') > 10 && virtcol('.') > 20 " TODO
+    if (! s:count || s:lastReplaceCnt < s:count) &&
+    \   s:IsInsideArea(line('.'), virtcol('.'), virtcol('.') + ingo#compat#strdisplaywidth(submatch(0), virtcol('.') - 1) - 1)
 	let s:lastReplaceCnt += 1
 	let s:lastReplacementLnum = line('.')
 	let s:lastReplacementLines[line('.')] = 1
@@ -280,7 +293,7 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
     let l:substitutionCommand = a:range . 'substitute/' . a:localRestriction . join(a:substitutionArguments, '') . 'e'
 "****D echomsg '****' l:substitutionCommand string(s:newText)
     call s:LastReplaceInit()
-    if s:count
+    if s:count || s:range ==# 'area'
 	" It would be nice if we could abort the :substitution when the
 	" s:lastReplaceCnt has been reached. Unfortunately, throwing an
 	" exception from ChangeGlobally#CountedReplace() will still substitute
