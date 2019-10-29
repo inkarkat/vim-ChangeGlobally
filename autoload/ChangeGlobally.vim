@@ -94,8 +94,7 @@ function! ChangeGlobally#SourceOperator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:deleteCommand = (s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
-    let l:changedText = s:DeleteChangedText(l:deleteCommand)
+    let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
