@@ -1,12 +1,9 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution.
 "
 " DEPENDENCIES:
-"   - ingo/msg.vim autoload script
-"   - ingo/search/buffer.vim autoload script
-"   - ingo/text.vim autoload script
-"   - repeat.vim (vimscript #2136) autoload script (optional)
-"   - visualrepeat.vim (vimscript #3848) autoload script (optional)
-"   - visualrepeat/reapply.vim autoload script (optional)
+"   - ingo-library.vim plugin
+"   - repeat.vim (vimscript #2136) plugin (optional)
+"   - visualrepeat.vim (vimscript #3848) plugin (optional)
 "
 " Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.

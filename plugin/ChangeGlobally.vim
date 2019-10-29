@@ -1,7 +1,6 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution.
 "
 " DEPENDENCIES:
-"   - ChangeGlobally.vim autoload script
 "
 " Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
