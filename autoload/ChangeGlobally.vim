@@ -205,16 +205,8 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
     endif
 
-    " Only apply the substitution [count] times. We do this via a
-    " replace-expression that counts the number of replacements; unlike a
-    " repeated single substitution, this avoids the issue of re-replacing.
-    " We also do this for the global (line / buffer) substitution without a
-    " [count] in order to determine whether there actually were other matches.
-    " If not, we indicate this with a beep.
-    " Note: We cannot simply pass in the replacement via string(s:newText); it
-    " may contain the / substitution separator, which must not appear at all in
-    " the expression. Therefore, we store this in a variable and directly
-    " reference it from ChangeGlobally#CountedReplace().
+    " Only apply the substitution [count] times within the area covered by
+    " {[target-]motion}. For that, we also need a replace-expression here.
     let l:replace = '\=ChangeGlobally#CountedAreaReplace()'
 
     if s:isDelete
