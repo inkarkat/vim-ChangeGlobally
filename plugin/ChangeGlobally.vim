@@ -104,7 +104,7 @@ nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 
 
 nnoremap <silent> <expr> <SID>(ChangeCwordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#CwordSourceTargetOperator')
-nnoremap <silent> <script> <Plug>(ChangeCwordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeCwordOperator)
+nnoremap <silent> <script> <Plug>(ChangeCwordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeCwordOperator)
 if ! hasmapto('<Plug>(ChangeCwordOperator)', 'n')
     nmap gco <Plug>(ChangeCwordOperator)
 endif
@@ -121,6 +121,13 @@ endif
 nnoremap <silent> <Plug>(ChangeAreaRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \let &opfunc = 'ChangeGlobally#RepeatTargetOperator'<Bar>normal! .<CR>
+" Unfortunately, this only works for delete; for change, the text editing itself
+" is the last command that gets repeated; the original {motion} got lost. All we
+" can do is thwart the native repeat (i.e. insert of the text at the current
+" position) and give a hint.
+nnoremap <silent> <Plug>(ChangeAreaCannotRepeat)
+\ :execute "normal! \<lt>C-\>\<lt>C-n>\<lt>Esc>"<Bar>
+\echomsg 'Cannot repeat on the same {motion}' . (exists('g:loaded_visualrepeat') && g:loaded_visualrepeat ? '; select the new target area and repeat from visual mode instead' : '')<CR>
 " Repeat in visual mode applies the same substitution to the selection.
 vnoremap <silent> <Plug>(ChangeAreaVisualRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
