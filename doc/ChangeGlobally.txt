@@ -140,6 +140,24 @@ USAGE							*ChangeGlobally-usage*
 [N]["x]gxg*{motion}	Delete the current word [into register x] and
 			apply the deletion to all / the first [N] occurrences
 			inside {motion} text.
+								    *gc_ALT-8*
+[N]["x]gc_ALT-8{motion}	Delete the current whole \_sWORD\_s [into register x]
+			and ALT-8t inserting. After exiting insert mode, that
+			text substitution is applied to all / the first [N]
+			occurrences inside {motion} text.
+								    *gx_ALT-8*
+[N]["x]gx_ALT-8{motion}	Delete the current whole \_sWORD\_s [into register x]
+			and apply the deletion to all / the first [N]
+			occurrences inside {motion} text.
+								   *gcg_ALT-8*
+[N]["x]gcg_ALT-8{motion}Delete the current WORD [into register x] and
+			ALT-8t inserting. After exiting insert mode, that text
+			substitution is applied to all / the first [N]
+			occurrences inside {motion} text.
+								   *gxg_ALT-8*
+[N]["x]gxg_ALT-8{motion}Delete the current WORD [into register x] and
+			apply the deletion to all / the first [N] occurrences
+			inside {motion} text.
 							   *ChangeArea-repeat*
 			When any of these commands is repeated via |.|, the
 			previous substitution of the same source text is

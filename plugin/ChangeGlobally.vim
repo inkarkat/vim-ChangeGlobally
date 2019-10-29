@@ -123,6 +123,26 @@ if ! hasmapto('<Plug>(DeleteWordOperator)', 'n')
     nmap gxg* <Plug>(DeleteWordOperator)
 endif
 
+nnoremap <silent> <expr> <SID>(ChangeWholeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWORDSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeWholeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
+if ! hasmapto('<Plug>(ChangeWholeWORDOperator)', 'n')
+    nmap gc<A-8> <Plug>(ChangeWholeWORDOperator)
+endif
+nnoremap <silent> <script> <Plug>(DeleteWholeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
+if ! hasmapto('<Plug>(DeleteWholeWORDOperator)', 'n')
+    nmap gx<A-8> <Plug>(DeleteWholeWORDOperator)
+endif
+
+nnoremap <silent> <expr> <SID>(ChangeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WORDSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
+if ! hasmapto('<Plug>(ChangeWORDOperator)', 'n')
+    nmap gcg<A-8> <Plug>(ChangeWORDOperator)
+endif
+nnoremap <silent> <script> <Plug>(DeleteWORDOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
+if ! hasmapto('<Plug>(DeleteWORDOperator)', 'n')
+    nmap gxg<A-8> <Plug>(DeleteWORDOperator)
+endif
+
 
 " Vim is able to repeat the g@ on its own; however, we need to re-use the
 " previous source text and just repeat the substitute on the new area, so a

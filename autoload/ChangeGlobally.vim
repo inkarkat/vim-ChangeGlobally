@@ -153,6 +153,12 @@ endfunction
 function! ChangeGlobally#WordSourceTargetOperator( type )
     call s:GivenSourceTargetOperator('\k', 'iw', '', a:type)
 endfunction
+function! ChangeGlobally#WholeWORDSourceTargetOperator( type )
+    call s:GivenSourceTargetOperator('\S', 'iW', function('ingo#regexp#MakeWholeWORDSearch'), a:type)
+endfunction
+function! ChangeGlobally#WORDSourceTargetOperator( type )
+    call s:GivenSourceTargetOperator('\S', 'iW', '', a:type)
+endfunction
 function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
     let s:range = 'area'
     let s:area = ingo#change#virtcols#Get(a:type)
