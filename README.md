@@ -154,15 +154,6 @@ USAGE
                             apply the deletion to all / the first [N] occurrences
                             inside {motion} text.
 
-                            When any of these commands is repeated via ., the
-                            previous substitution of the same source text is
-                            re-applied to {motion} (relative to the current
-                            position now) again.
-                            With the visualrepeat.vim plugin, you can also
-                            directly reapply to the current selection instead of
-                            the previous {motion}. Further repeats will then
-                            target a selection of the same size as before.
-
     [N]["x]<Leader>gc{source-motion}{target-motion}
                             Delete {source-motion} text [into register x] and
                             start inserting. After exiting insert mode, that text
@@ -183,6 +174,14 @@ USAGE
                             the deletion to all / the first [N] occurrences inside
                             {motion} text.
 
+                            When any of these commands is repeated via ., the
+                            previous substitution of the same source text is
+                            re-applied to {motion} (relative to the current
+                            position now) again.
+                            With the visualrepeat.vim plugin, you can also
+                            directly reapply to the current selection instead of
+                            the previous {motion}. Further repeats will then
+                            target a selection of the same size as before.
 ### EXAMPLE
 
 Suppose you have a line like this, and you want to change "de" to "en":

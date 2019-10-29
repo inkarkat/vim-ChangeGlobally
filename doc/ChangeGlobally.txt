@@ -167,15 +167,6 @@ USAGE							*ChangeGlobally-usage*
 [N]["x]gxg_ALT-8{motion}Delete the current WORD [into register x] and
 			apply the deletion to all / the first [N] occurrences
 			inside {motion} text.
-							   *ChangeArea-repeat*
-			When any of these commands is repeated via |.|, the
-			previous substitution of the same source text is
-			re-applied to {motion} (relative to the current
-			position now) again.
-			With the |visualrepeat.vim| plugin, you can also
-			directly reapply to the current selection instead of
-			the previous {motion}. Further repeats will then
-			target a selection of the same size as before.
 
 						   *<Leader>gc* *v_<Leader>gc*
 [N]["x]<Leader>gc{source-motion}{target-motion}
@@ -198,6 +189,15 @@ USAGE							*ChangeGlobally-usage*
 			the deletion to all / the first [N] occurrences inside
 			{motion} text.
 
+							   *ChangeArea-repeat*
+			When any of these commands is repeated via |.|, the
+			previous substitution of the same source text is
+			re-applied to {motion} (relative to the current
+			position now) again.
+			With the |visualrepeat.vim| plugin, you can also
+			directly reapply to the current selection instead of
+			the previous {motion}. Further repeats will then
+			target a selection of the same size as before.
 EXAMPLE						      *ChangeGlobally-example*
 
 Suppose you have a line like this, and you want to change "de" to "en":
