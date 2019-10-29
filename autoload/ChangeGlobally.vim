@@ -100,7 +100,7 @@ function! ChangeGlobally#SourceOperator( type )
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
     let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
-    let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
+    let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
     " repeated single substitution, this avoids the issue of re-replacing.
