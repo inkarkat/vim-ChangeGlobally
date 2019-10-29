@@ -203,11 +203,23 @@ EXAMPLE						      *ChangeGlobally-example*
 Suppose you have a line like this, and you want to change "de" to "en":
 A[lang=de]:after, SPAN[lang=de]:after { content: url("lang.de.gif"); } ~
 
-With the cursor on the start of any of the "de", type gce, enter the text
+With the cursor on the start of any of the "de", type |gc|e, enter the text
 "en", then press <Esc>. The line will turn into
 A[lang=en]:after, SPAN[lang=en]:after { content: url("lang.en.gif"); } ~
 You can now re-apply this substitution to other lines or a visual selection
-via |.|
+via |.| repeat.
+
+Now we want to change all SPAN to DIV in the current paragraph. Position the
+cursor on the SPAN and type |gc*|ip, enter "DIV", and press <Esc>. You'll get
+A[lang=en]:after, DIV[lang=en]:after { content: url("lang.en.gif"); } ~
+The change is also propagated to surrounding lines, according to the |ip| text
+object.
+
+Now let's get rid of the ":after" in this line and the next 3 ones. With the
+cursor on the ":", type |<Leader>gx|t,3+, and the line turns to
+A[lang=en], DIV[lang=en] { content: url("lang.en.gif"); } ~
+as the t, chooses the source text (to be deleted), and 3+ is a motion that
+includes the next 3 lines.
 
 ==============================================================================
 INSTALLATION					 *ChangeGlobally-installation*
