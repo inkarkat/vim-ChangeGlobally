@@ -122,15 +122,24 @@ USAGE							*ChangeGlobally-usage*
 			deletion globally.
 
 
-									 *gco*
-[N]["x]gco{motion}	Delete the current word [into register x] and start
-			inserting. After exiting insert mode, that text
+								     *gc_star*
+[N]["x]gc*{motion}	Delete the current whole \<word\> [into register x]
+			and start inserting. After exiting insert mode, that
+			text substitution is applied to all / the first [N]
+			occurrences inside {motion} text.
+								     *gx_star*
+[N]["x]gx*{motion}	Delete the current whole \<word\> [into register x]
+			and apply the deletion to all / the first [N]
+			occurrences inside {motion} text.
+								    *gcg_star*
+[N]["x]gcg*{motion}	Delete the current word [into register x] and
+			start inserting. After exiting insert mode, that text
 			substitution is applied to all / the first [N]
 			occurrences inside {motion} text.
-									 *gxo*
-[N]["x]gxo{motion}	Delete the current word [into register x] and apply
-			the deletion to all / the first [N] occurrences inside
-			{motion} text.
+								    *gxg_star*
+[N]["x]gxg*{motion}	Delete the current word [into register x] and
+			apply the deletion to all / the first [N] occurrences
+			inside {motion} text.
 							   *ChangeArea-repeat*
 			When any of these commands is repeated via |.|, the
 			previous substitution of the same source text is

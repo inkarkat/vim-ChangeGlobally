@@ -103,15 +103,24 @@ nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 
 
 
-nnoremap <silent> <expr> <SID>(ChangeCwordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#CwordSourceTargetOperator')
-nnoremap <silent> <script> <Plug>(ChangeCwordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeCwordOperator)
-if ! hasmapto('<Plug>(ChangeCwordOperator)', 'n')
-    nmap gco <Plug>(ChangeCwordOperator)
+nnoremap <silent> <expr> <SID>(ChangeWholeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWordSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeWholeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
+if ! hasmapto('<Plug>(ChangeWholeWordOperator)', 'n')
+    nmap gc* <Plug>(ChangeWholeWordOperator)
+endif
+nnoremap <silent> <script> <Plug>(DeleteWholeWordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
+if ! hasmapto('<Plug>(DeleteWholeWordOperator)', 'n')
+    nmap gx* <Plug>(DeleteWholeWordOperator)
 endif
 
-nnoremap <silent> <script> <Plug>(DeleteCwordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeCwordOperator)
-if ! hasmapto('<Plug>(DeleteCwordOperator)', 'n')
-    nmap gxo <Plug>(DeleteCwordOperator)
+nnoremap <silent> <expr> <SID>(ChangeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WordSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
+if ! hasmapto('<Plug>(ChangeWordOperator)', 'n')
+    nmap gcg* <Plug>(ChangeWordOperator)
+endif
+nnoremap <silent> <script> <Plug>(DeleteWordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
+if ! hasmapto('<Plug>(DeleteWordOperator)', 'n')
+    nmap gxg* <Plug>(DeleteWordOperator)
 endif
 
 

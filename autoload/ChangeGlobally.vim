@@ -147,8 +147,11 @@ function! s:GoToSource( sourcePattern ) abort
 	return [0, 0]
     endif
 endfunction
-function! ChangeGlobally#CwordSourceTargetOperator( type )
+function! ChangeGlobally#WholeWordSourceTargetOperator( type )
     call s:GivenSourceTargetOperator('\k\+', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
+endfunction
+function! ChangeGlobally#WordSourceTargetOperator( type )
+    call s:GivenSourceTargetOperator('\k\+', 'iw', '', a:type)
 endfunction
 function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
     let s:range = 'area'
