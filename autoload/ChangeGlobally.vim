@@ -148,20 +148,27 @@ function! s:GoToSource( sourcePattern ) abort
     endif
 endfunction
 function! ChangeGlobally#CwordSourceTargetOperator( type )
+    call s:GivenSourceTargetOperator('\k\+', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
+endfunction
+function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
     let s:range = 'area'
     let s:area = ingo#change#virtcols#Get(a:type)
-    let [l:isFound, l:isAtEndOfLine] = s:GoToSource('\k\+')
+    let [l:isFound, l:isAtEndOfLine] = s:GoToSource(a:sourcePattern)
     if ! l:isFound
 	call ingo#msg#ErrorMsg('No string under cursor')
 	return
     endif
 
     " TODO: Special case for "_
-    execute 'normal! "' . s:register . 'diw'
+    execute 'normal! "' . s:register . 'd' . a:sourceTextObject
 
 
     let l:changedText = getreg(s:register)
-    let l:search = '\V\C\<' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g') . '\>'
+    let l:search = ingo#regexp#EscapeLiteralText(l:changedText, '/')
+    if ! empty(a:SourceToPatternFuncref)
+	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
+    endif
+
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
     " repeated single substitution, this avoids the issue of re-replacing.

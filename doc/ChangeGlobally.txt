@@ -125,12 +125,12 @@ USAGE							*ChangeGlobally-usage*
 									 *gco*
 [N]["x]gco{motion}	Delete the current word [into register x] and start
 			inserting. After exiting insert mode, that text
-			substitution is applied to all / [N] occurrences
-			inside {motion} text.
+			substitution is applied to all / the first [N]
+			occurrences inside {motion} text.
 									 *gxo*
 [N]["x]gxo{motion}	Delete the current word [into register x] and apply
-			the deletion to all / [N] occurrences inside {motion}
-			text.
+			the deletion to all / the first [N] occurrences inside
+			{motion} text.
 							   *ChangeArea-repeat*
 			When any of these commands is repeated via |.|, the
 			previous substitution of the same source text is
