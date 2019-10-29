@@ -61,6 +61,16 @@ function! ChangeGlobally#UnarmInsertMode()
 	unlet s:save_eventignore
     endif
 endfunction
+function! s:DeleteChangedText( deleteCommand ) abort
+    " Need special case for "_ to still obtain the deleted text (without
+    " permanently clobbering the register).
+    if s:register ==# '_'
+	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:deleteCommand . '" | return getreg("\"")')
+    else
+	execute 'normal! "' . s:register . a:deleteCommand
+	return getreg(s:register)
+    endif
+endfunction
 function! ChangeGlobally#SourceOperator( type )
     let l:isAtEndOfLine = 0
 
@@ -89,13 +99,7 @@ function! ChangeGlobally#SourceOperator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:deleteCommand = (s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
-
-    " TODO: Special case for "_
-    execute 'normal! "' . s:register . l:deleteCommand
-
-
-    let l:changedText = getreg(s:register)
+    let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
     let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
@@ -195,11 +199,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	return
     endif
 
-    " TODO: Special case for "_
-    execute 'normal! "' . s:register . 'd' . a:sourceTextObject
-
-
-    let l:changedText = getreg(s:register)
+    let l:changedText = s:DeleteChangedText('d' . a:sourceTextObject)
     let l:search = ingo#regexp#EscapeLiteralText(l:changedText, '/')
     if ! empty(a:SourceToPatternFuncref)
 	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])

@@ -300,11 +300,6 @@ LIMITATIONS
   InsertLeave event, and therefore trigger the global change -- prematurely,
   as perceived by the user who isn't aware of this.
 
-### TODO
-
-- Implement special case for the black-hole register, where we cannot extract
-  the original text.
-
 ### CONTRIBUTING
 
 Report any bugs, send patches, or suggest features via the issue tracker at
@@ -319,6 +314,8 @@ HISTORY
   / selection over the text moved over by {motion}. So instead of specifying
   the source text via {motion}, the target area is specified. There's even a
   mapping that lets you specify both source and target as two {motion}s!
+- Implement special case for the black-hole register, where we cannot extract
+  the original text.
 
 __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.040!__
 

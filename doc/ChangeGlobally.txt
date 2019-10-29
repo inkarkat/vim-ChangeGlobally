@@ -306,9 +306,6 @@ KNOWN PROBLEMS				       *ChangeGlobally-known-problems*
 
 TODO							 *ChangeGlobally-todo*
 
-- Implement special case for the black-hole register, where we cannot extract
-  the original text.
-
 IDEAS							*ChangeGlobally-ideas*
 
 CONTRIBUTING					   *ChangeGlobally-contribute*
@@ -325,6 +322,8 @@ HISTORY						      *ChangeGlobally-history*
   / selection over the text moved over by {motion}. So instead of specifying
   the source text via {motion}, the target area is specified. There's even a
   mapping that lets you specify both source and target as two {motion}s!
+- Implement special case for the black-hole register, where we cannot extract
+  the original text.
   *** You need to update to ingo-library (vimscript #4433) version 1.040! ***
 
 1.31	03-Nov-2018
