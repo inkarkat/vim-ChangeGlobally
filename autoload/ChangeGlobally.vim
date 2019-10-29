@@ -207,7 +207,10 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 
     " Only apply the substitution [count] times within the area covered by
     " {[target-]motion}. For that, we also need a replace-expression here.
-    let l:replace = '\=ChangeGlobally#CountedAreaReplace()'
+    " As we need to do the evaluation and actual replacement in two stages, and
+    " the hook can only inspect the l:replace value, pass the second stage as a
+    " quoted argument.
+    let l:replace = '\=ChangeGlobally#CountedAreaReplace("ChangeGlobally#AreaReplaceSecondPass()")'
 
     if s:isDelete
 	" For a global deletion, we don't need to set up and go to insert mode;
@@ -339,7 +342,7 @@ function! s:IsInsideArea( lnum, startVirtCol, endVirtCol ) abort
 	\   (a:startVirtCol >= s:area.startVirtCol && a:endVirtCol <= s:area.effectiveEndVirtCol)
     endif
 endfunction
-function! ChangeGlobally#CountedAreaReplace()
+function! ChangeGlobally#CountedAreaReplace( ... )
     if (! s:count || s:lastReplaceCnt < s:count) &&
     \   s:IsInsideArea(line('.'), virtcol('.'), virtcol('.') + ingo#compat#strdisplaywidth(submatch(0), virtcol('.') - 1) - 1)
 	let s:lastReplaceCnt += 1
@@ -383,14 +386,17 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
 	" We have to suppress the original message and emulate that, too.
 	silent execute l:substitutionCommand
 
-	if s:lastReplaceCnt > 0 && a:substitutionArguments[4] ==# '\=ChangeGlobally#CountedAreaReplace()'
+	if s:lastReplaceCnt > 0 && a:substitutionArguments[4] =~# '=ChangeGlobally#CountedAreaReplace('
 	    " The area replacement only records the locations on the first pass,
 	    " to avoid modifying the size of the area. (We cannot use the trick
 	    " of doing the replacements from last to first with :substitute.)
 	    " Do the replacements only in a second pass (this time without the
 	    " :s_c confirm flag).
 	    let l:secondPassSubstitutionArguments = copy(a:substitutionArguments)
-	    let l:secondPassSubstitutionArguments[4] = '\=ChangeGlobally#AreaReplaceSecondPass()'
+	    " Extract the dummy quoted function call (that is ignored by
+	    " ChangeGlobally#CountedAreaReplace(), but needs to be passed so
+	    " that the hook can replace it) and call that one now.
+	    let l:secondPassSubstitutionArguments[4] = '\=' . matchstr(l:secondPassSubstitutionArguments[4], '^.*(\([''"]\)\zs.*\ze\1)$')
 	    let l:secondPassSubstitutionArguments[-1] = ingo#str#trd(l:secondPassSubstitutionArguments[-1], 'c')
 	    let l:substitutionCommand = a:range . 'substitute/' . a:localRestriction . join(l:secondPassSubstitutionArguments, '') . 'e'
 	    silent execute l:substitutionCommand
