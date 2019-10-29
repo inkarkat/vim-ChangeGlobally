@@ -200,7 +200,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
     endif
 
     let l:changedText = s:DeleteChangedText('d' . a:sourceTextObject)
-    let l:search = ingo#regexp#EscapeLiteralText(l:changedText, '/')
+    let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     if ! empty(a:SourceToPatternFuncref)
 	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
     endif
