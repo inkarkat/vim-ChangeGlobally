@@ -142,16 +142,16 @@ function! s:GoToSource( sourcePattern ) abort
     " Like * and <cword>, search forward within the current line if not yet on
     " the source.
     if search(a:sourcePattern, 'cW', line('.')) > 0
-	return [1, (search('\%#' . a:sourcePattern . '$', 'cnW', line('.')) > 0)]
+	return [1, (search('\%#' . a:sourcePattern . '\+$', 'cnW', line('.')) > 0)]
     else
 	return [0, 0]
     endif
 endfunction
 function! ChangeGlobally#WholeWordSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('\k\+', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
+    call s:GivenSourceTargetOperator('\k', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
 endfunction
 function! ChangeGlobally#WordSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('\k\+', 'iw', '', a:type)
+    call s:GivenSourceTargetOperator('\k', 'iw', '', a:type)
 endfunction
 function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
     let s:range = 'area'
