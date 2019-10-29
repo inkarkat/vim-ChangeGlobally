@@ -31,6 +31,8 @@ endif
 
 "- mappings --------------------------------------------------------------------
 
+" Change moved-over text / selection globally.
+
 nnoremap <silent> <expr> <SID>(ChangeGloballyOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SourceOperator')
 nnoremap <silent> <script> <Plug>(ChangeGloballyOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeGloballyRepeat)", "\<lt>Plug>(ChangeGloballyVisualRepeat)")<CR><SID>(ChangeGloballyOperator)
 if ! hasmapto('<Plug>(ChangeGloballyOperator)', 'n')
@@ -102,6 +104,7 @@ nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 
 
 
+" Change current word / WORD / selection / moved-over text over the moved-over area.
 
 nnoremap <silent> <expr> <SID>(ChangeWholeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWordSourceTargetOperator')
 nnoremap <silent> <script> <Plug>(ChangeWholeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
