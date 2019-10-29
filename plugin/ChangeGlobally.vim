@@ -106,7 +106,7 @@ nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 
 " Change current word / WORD / selection / moved-over text over the moved-over area.
 
-nnoremap <silent> <expr> <SID>(ChangeWholeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWordSourceTargetOperator')
+nnoremap <silent> <expr> <SID>(ChangeWholeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWordSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWholeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
 if ! hasmapto('<Plug>(ChangeWholeWordOperator)', 'n')
     nmap gc* <Plug>(ChangeWholeWordOperator)
@@ -116,7 +116,7 @@ if ! hasmapto('<Plug>(DeleteWholeWordOperator)', 'n')
     nmap gx* <Plug>(DeleteWholeWordOperator)
 endif
 
-nnoremap <silent> <expr> <SID>(ChangeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WordSourceTargetOperator')
+nnoremap <silent> <expr> <SID>(ChangeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WordSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
 if ! hasmapto('<Plug>(ChangeWordOperator)', 'n')
     nmap gcg* <Plug>(ChangeWordOperator)
@@ -126,7 +126,7 @@ if ! hasmapto('<Plug>(DeleteWordOperator)', 'n')
     nmap gxg* <Plug>(DeleteWordOperator)
 endif
 
-nnoremap <silent> <expr> <SID>(ChangeWholeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWORDSourceTargetOperator')
+nnoremap <silent> <expr> <SID>(ChangeWholeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWORDSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWholeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
 if ! hasmapto('<Plug>(ChangeWholeWORDOperator)', 'n')
     nmap gc<A-8> <Plug>(ChangeWholeWORDOperator)
@@ -136,7 +136,7 @@ if ! hasmapto('<Plug>(DeleteWholeWORDOperator)', 'n')
     nmap gx<A-8> <Plug>(DeleteWholeWORDOperator)
 endif
 
-nnoremap <silent> <expr> <SID>(ChangeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WORDSourceTargetOperator')
+nnoremap <silent> <expr> <SID>(ChangeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WORDSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
 if ! hasmapto('<Plug>(ChangeWORDOperator)', 'n')
     nmap gcg<A-8> <Plug>(ChangeWORDOperator)
@@ -147,7 +147,7 @@ if ! hasmapto('<Plug>(DeleteWORDOperator)', 'n')
 endif
 
 
-nnoremap <silent> <expr> <SID>(ChangeOperatorOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#OperatorSourceTargetOperator')
+nnoremap <silent> <expr> <SID>(ChangeOperatorOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#OperatorSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeOperatorOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
 if ! hasmapto('<Plug>(ChangeOperatorOperator)', 'n')
     nmap <Leader>gc <Plug>(ChangeOperatorOperator)
@@ -157,7 +157,7 @@ if ! hasmapto('<Plug>(DeleteOperatorOperator)', 'n')
     nmap <Leader>gx <Plug>(DeleteOperatorOperator)
 endif
 
-nnoremap <silent> <expr> <SID>(ChangeSelectionOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SelectionSourceTargetOperator')
+nnoremap <silent> <expr> <SID>(ChangeSelectionOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SelectionSourceOperatorTarget')
 vnoremap <silent> <script> <Plug>(ChangeSelectionOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
 if ! hasmapto('<Plug>(ChangeSelectionOperator)', 'v')
     xmap <Leader>gc <Plug>(ChangeSelectionOperator)
@@ -173,7 +173,7 @@ endif
 " different opfunc just runs pieces of the logic.
 nnoremap <silent> <Plug>(ChangeAreaRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
-\let &opfunc = 'ChangeGlobally#RepeatTargetOperator'<Bar>normal! .<CR>
+\let &opfunc = 'ChangeGlobally#RepeatOperatorTarget'<Bar>normal! .<CR>
 " Unfortunately, this only works for delete; for change, the text editing itself
 " is the last command that gets repeated; the original {motion} got lost. All we
 " can do is thwart the native repeat (i.e. insert of the text at the current

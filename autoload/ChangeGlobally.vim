@@ -153,19 +153,19 @@ function! s:GoToSource( sourcePattern ) abort
 	return [0, 0]
     endif
 endfunction
-function! ChangeGlobally#WholeWordSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('\k', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
+function! ChangeGlobally#WholeWordSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\k', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
 endfunction
-function! ChangeGlobally#WordSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('\k', 'iw', '', a:type)
+function! ChangeGlobally#WordSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\k', 'iw', '', a:type)
 endfunction
-function! ChangeGlobally#WholeWORDSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('\S', 'iW', function('ingo#regexp#MakeWholeWORDSearch'), a:type)
+function! ChangeGlobally#WholeWORDSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\S', 'iW', function('ingo#regexp#MakeWholeWORDSearch'), a:type)
 endfunction
-function! ChangeGlobally#WORDSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('\S', 'iW', '', a:type)
+function! ChangeGlobally#WORDSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\S', 'iW', '', a:type)
 endfunction
-function! ChangeGlobally#OperatorSourceTargetOperator( type )
+function! ChangeGlobally#OperatorSourceOperatorTarget( type )
     " Turn the {motion} into a visual selection, then follow the path of
     " changing / deleting the selected text in {motion} text.
     if a:type ==# 'char'
@@ -183,13 +183,13 @@ function! ChangeGlobally#OperatorSourceTargetOperator( type )
     call setpos('.', s:pos)
 
     " Query the second {target-motion} now. We have to use feedkeys() for that.
-    let &opfunc = 'ChangeGlobally#SelectionSourceTargetOperator'
+    let &opfunc = 'ChangeGlobally#SelectionSourceOperatorTarget'
     call feedkeys('g@', 'ni')
 endfunction
-function! ChangeGlobally#SelectionSourceTargetOperator( type )
-    call s:GivenSourceTargetOperator('', ":normal! gv\<CR>", '', a:type)
+function! ChangeGlobally#SelectionSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('', ":normal! gv\<CR>", '', a:type)
 endfunction
-function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
+function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
     let s:range = 'area'
     let s:area = ingo#change#virtcols#Get(a:type)
     let [l:isFound, l:isAtEndOfLine] = s:GoToSource(a:sourcePattern)
@@ -245,7 +245,7 @@ function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceTo
     " repeat there.
     call s:ArmInsertMode(l:search, l:replace)
 endfunction
-function! ChangeGlobally#RepeatTargetOperator( type )
+function! ChangeGlobally#RepeatOperatorTarget( type )
     let s:range = 'area'
     let s:area = ingo#change#virtcols#Get(a:type)
 
