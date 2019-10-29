@@ -144,6 +144,27 @@ if ! hasmapto('<Plug>(DeleteWORDOperator)', 'n')
 endif
 
 
+nnoremap <silent> <expr> <SID>(ChangeOperatorOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#OperatorSourceTargetOperator')
+nnoremap <silent> <script> <Plug>(ChangeOperatorOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
+if ! hasmapto('<Plug>(ChangeOperatorOperator)', 'n')
+    nmap <Leader>gc <Plug>(ChangeOperatorOperator)
+endif
+nnoremap <silent> <script> <Plug>(DeleteOperatorOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
+if ! hasmapto('<Plug>(DeleteOperatorOperator)', 'n')
+    nmap <Leader>gx <Plug>(DeleteOperatorOperator)
+endif
+
+nnoremap <silent> <expr> <SID>(ChangeSelectionOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SelectionSourceTargetOperator')
+vnoremap <silent> <script> <Plug>(ChangeSelectionOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
+if ! hasmapto('<Plug>(ChangeSelectionOperator)', 'v')
+    xmap <Leader>gc <Plug>(ChangeSelectionOperator)
+endif
+vnoremap <silent> <script> <Plug>(DeleteSelectionOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
+if ! hasmapto('<Plug>(DeleteSelectionOperator)', 'v')
+    xmap <Leader>gx <Plug>(DeleteSelectionOperator)
+endif
+
+
 " Vim is able to repeat the g@ on its own; however, we need to re-use the
 " previous source text and just repeat the substitute on the new area, so a
 " different opfunc just runs pieces of the logic.

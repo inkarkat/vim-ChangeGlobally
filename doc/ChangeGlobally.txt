@@ -168,6 +168,27 @@ USAGE							*ChangeGlobally-usage*
 			the previous {motion}. Further repeats will then
 			target a selection of the same size as before.
 
+						   *<Leader>gc* *v_<Leader>gc*
+[N]["x]<Leader>gc{source-motion}{target-motion}
+			Delete {source-motion} text [into register x] and
+			start inserting. After exiting insert mode, that text
+			substitution is applied to all / the first [N]
+			occurrences inside {target-motion} text.
+{Visual}[N]["x]<Leader>gc{motion}
+			Delete the selected text [into register x] and start
+			inserting. After exiting insert mode, that text
+			substitution is applied to all / the first [N]
+			occurrences inside {motion} text.
+						   *<Leader>gx* *v_<Leader>gx*
+[N]["x]<Leader>gx{source-motion}{target-motion}
+			Delete the {source-motion} text [into register x] and
+			apply the deletion to all / the first [N] occurrences
+			inside {target-motion} text.
+{Visual}[N]["x]<Leader>gx{motion}
+			Delete the selected text [into register x] and apply
+			the deletion to all / the first [N] occurrences inside
+			{motion} text.
+
 EXAMPLE						      *ChangeGlobally-example*
 
 Suppose you have a line like this, and you want to change "de" to "en":

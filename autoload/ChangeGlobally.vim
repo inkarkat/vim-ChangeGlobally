@@ -138,6 +138,12 @@ function! ChangeGlobally#SourceOperator( type )
     call s:ArmInsertMode(l:search, l:replace)
 endfunction
 function! s:GoToSource( sourcePattern ) abort
+    if empty(a:sourcePattern)
+	" Assume visual selection.
+	let [l:lnum, l:col] = ingo#selection#GetExclusiveEndPos()[1:2]
+	return [1, (len(getline(l:lnum)) == l:col - 1)]
+    endif
+
     call setpos('.', s:pos)
     " Like * and <cword>, search forward within the current line if not yet on
     " the source.
@@ -158,6 +164,30 @@ function! ChangeGlobally#WholeWORDSourceTargetOperator( type )
 endfunction
 function! ChangeGlobally#WORDSourceTargetOperator( type )
     call s:GivenSourceTargetOperator('\S', 'iW', '', a:type)
+endfunction
+function! ChangeGlobally#OperatorSourceTargetOperator( type )
+    " Turn the {motion} into a visual selection, then follow the path of
+    " changing / deleting the selected text in {motion} text.
+    if a:type ==# 'char'
+	silent! execute 'normal! g`[vg`]'. (&selection ==# 'exclusive' ? 'l' : '') . "\<C-\>\<C-n>"
+    elseif a:type ==# 'line'
+	silent! execute "normal! g'[Vg']\<C-\>\<C-n>"
+    elseif a:type ==# 'block'
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	return
+    endif
+
+    " The {source-motion} changed the cursor position, but we want the
+    " {target-motion} to start from the original one. Fortunately, that already
+    " got recorded so we can jump back to it.
+    call setpos('.', s:pos)
+
+    " Query the second {target-motion} now. We have to use feedkeys() for that.
+    let &opfunc = 'ChangeGlobally#SelectionSourceTargetOperator'
+    call feedkeys('g@', 'ni')
+endfunction
+function! ChangeGlobally#SelectionSourceTargetOperator( type )
+    call s:GivenSourceTargetOperator('', ":normal! gv\<CR>", '', a:type)
 endfunction
 function! s:GivenSourceTargetOperator( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
     let s:range = 'area'
