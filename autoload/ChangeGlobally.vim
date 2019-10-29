@@ -62,9 +62,14 @@ function! ChangeGlobally#UnarmInsertMode()
     endif
 endfunction
 function! s:DeleteChangedText( deleteCommand ) abort
-    " TODO: Special case for "_
-    execute 'normal! "' . s:register . a:deleteCommand
-    return getreg(s:register)
+    " Need special case for "_ to still obtain the deleted text (without
+    " permanently clobbering the register).
+    if s:register ==# '_'
+	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:deleteCommand . '" | return getreg("\"")')
+    else
+	execute 'normal! "' . s:register . a:deleteCommand
+	return getreg(s:register)
+    endif
 endfunction
 function! ChangeGlobally#SourceOperator( type )
     let l:isAtEndOfLine = 0
