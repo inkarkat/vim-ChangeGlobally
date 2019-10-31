@@ -268,9 +268,16 @@ turn off this feature by setting it to 0:
 
     let g:ChangeGlobally_LimitToCurrentLineCount = 99
 
-If you want to use different mappings, map your keys to the
-&lt;Plug&gt;(ChangeGlobally...) and &lt;Plug&gt;(DeleteGlobally...) mapping targets
-_before_ sourcing the script (e.g. in your vimrc):
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining:
+
+    :let g:ChangeGlobally_no_mappings = 1
+
+This saves you from mapping dummy keys to all unwanted mapping targets.
+
+If you want to use different mappings, map your keys to the &lt;Plug&gt;(Change...)
+and &lt;Plug&gt;(Delete...) mapping targets _before_ sourcing the script (e.g. in
+your vimrc):
 
     nmap <Leader>c <Plug>(ChangeGloballyOperator)
     nmap <Leader>cc <Plug>(ChangeGloballyLine)
@@ -315,6 +322,8 @@ HISTORY
   mapping that lets you specify both source and target as two {motion}s!
 - Implement special case for the black-hole register, where we cannot extract
   the original text.
+- ENH: Allow to disable all default mappings via a single
+  g:ChangeGlobally\_no\_mappings configuration flag.
 
 __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.040!__
 
