@@ -1,4 +1,4 @@
-CHANGE GLOBALLY   
+CHANGE GLOBALLY
 ===============================================================================
 _by Ingo Karkat_
 
@@ -18,7 +18,7 @@ changed, to the rest of the buffer.
 ### HOW IT WORKS
 
 The gc command hooks itself into the InsertLeave event, then applies
-something like :s/\=@"/\=@./g to the line or buffer.
+something like :s/\\=@"/\\=@./g to the line or buffer.
 
 ### SEE ALSO
 
@@ -38,6 +38,15 @@ something like :s/\=@"/\=@./g to the line or buffer.
 - multichange.vim ([vimscript #4309](http://www.vim.org/scripts/script.php?script_id=4309)) uses a command :[range]MultiChange to
   modify the default c command to do an entire-word global substitution in the
   entire range.
+- vim-subversive (https://github.com/svermeulen/vim-subversive) implements a
+  "substitute over range motion" that works like gc\* and &lt;Leader&gt;gc, but
+  queries for the replacement text instead of letting you edit it in the
+  buffer.
+- vim-mode-plus for the Atom editor has an occurrence modifier for
+  operator-pending mode
+  (https://github.com/t9md/atom-vim-mode-plus/wiki/OccurrenceModifier) that
+  applies the current word to the {motion} text, working like gc\* / gx\* (but
+  not limited to change and delete, so other commands like gU also work).
 
 USAGE
 ------------------------------------------------------------------------------
@@ -109,6 +118,70 @@ USAGE
     ["x]gxx                 Delete [count] lines [into register x] and apply the
                             deletion globally.
 
+    [N]["x]gc*{motion}      Delete the current whole \<word\> [into register x]
+                            and start inserting. After exiting insert mode, that
+                            text substitution is applied to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]gx*{motion}      Delete the current whole \<word\> [into register x]
+                            and apply the deletion to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]gcg*{motion}     Delete the current word [into register x] and
+                            start inserting. After exiting insert mode, that text
+                            substitution is applied to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]gxg*{motion}     Delete the current word [into register x] and
+                            apply the deletion to all / the first [N] occurrences
+                            inside {motion} text.
+
+    [N]["x]gc_ALT-8{motion} Delete the current whole \_sWORD\_s [into register x]
+                            and ALT-8t inserting. After exiting insert mode, that
+                            text substitution is applied to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]gx_ALT-8{motion} Delete the current whole \_sWORD\_s [into register x]
+                            and apply the deletion to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]gcg_ALT-8{motion}Delete the current WORD [into register x] and
+                            ALT-8t inserting. After exiting insert mode, that text
+                            substitution is applied to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]gxg_ALT-8{motion}Delete the current WORD [into register x] and
+                            apply the deletion to all / the first [N] occurrences
+                            inside {motion} text.
+
+    [N]["x]<Leader>gc{source-motion}{target-motion}
+                            Delete {source-motion} text [into register x] and
+                            start inserting. After exiting insert mode, that text
+                            substitution is applied to all / the first [N]
+                            occurrences inside {target-motion} text.
+    {Visual}[N]["x]<Leader>gc{motion}
+                            Delete the selected text [into register x] and start
+                            inserting. After exiting insert mode, that text
+                            substitution is applied to all / the first [N]
+                            occurrences inside {motion} text.
+
+    [N]["x]<Leader>gx{source-motion}{target-motion}
+                            Delete the {source-motion} text [into register x] and
+                            apply the deletion to all / the first [N] occurrences
+                            inside {target-motion} text.
+    {Visual}[N]["x]<Leader>gx{motion}
+                            Delete the selected text [into register x] and apply
+                            the deletion to all / the first [N] occurrences inside
+                            {motion} text.
+
+                            When any of these commands is repeated via ., the
+                            previous substitution of the same source text is
+                            re-applied to {motion} (relative to the current
+                            position now) again.
+                            With the visualrepeat.vim plugin, you can also
+                            directly reapply to the current selection instead of
+                            the previous {motion}. Further repeats will then
+                            target a selection of the same size as before.
 ### EXAMPLE
 
 Suppose you have a line like this, and you want to change "de" to "en":
@@ -116,13 +189,29 @@ Suppose you have a line like this, and you want to change "de" to "en":
 A[lang=de]:after, SPAN[lang=de]:after { content: url("lang.de.gif"); }
 ```
 
-With the cursor on the start of any of the "de", type gce, enter the text
-"en", then press <Esc>. The line will turn into
+With the cursor on the start of any of the "de", type |gc|e, enter the text
+"en", then press &lt;Esc&gt;. The line will turn into
 ```
 A[lang=en]:after, SPAN[lang=en]:after { content: url("lang.en.gif"); }
 ```
 You can now re-apply this substitution to other lines or a visual selection
-via .
+via . repeat.
+
+Now we want to change all SPAN to DIV in the current paragraph. Position the
+cursor on the SPAN and type |gc\*|ip, enter "DIV", and press &lt;Esc&gt;. You'll get
+```
+A[lang=en]:after, DIV[lang=en]:after { content: url("lang.en.gif"); }
+```
+The change is also propagated to surrounding lines, according to the ip text
+object.
+
+Now let's get rid of the ":after" in this line and the next 3 ones. With the
+cursor on the ":", type |&lt;Leader&gt;gx|t,3+, and the line turns to
+```
+A[lang=en], DIV[lang=en] { content: url("lang.en.gif"); }
+```
+as the t, chooses the source text (to be deleted), and 3+ is a motion that
+includes the next 3 lines.
 
 INSTALLATION
 ------------------------------------------------------------------------------
@@ -146,7 +235,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.011 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.040 or
   higher.
 - repeat.vim ([vimscript #2136](http://www.vim.org/scripts/script.php?script_id=2136)) plugin (optional)
 - visualrepeat.vim ([vimscript #3848](http://www.vim.org/scripts/script.php?script_id=3848)) plugin (version 2.00 or higher; optional)
@@ -179,9 +268,16 @@ turn off this feature by setting it to 0:
 
     let g:ChangeGlobally_LimitToCurrentLineCount = 99
 
-If you want to use different mappings, map your keys to the
-<Plug>(ChangeGlobally...) and <Plug>(DeleteGlobally...) mapping targets
-_before_ sourcing the script (e.g. in your vimrc):
+If you want no or only a few of the available mappings, you can completely
+turn off the creation of the default mappings by defining:
+
+    :let g:ChangeGlobally_no_mappings = 1
+
+This saves you from mapping dummy keys to all unwanted mapping targets.
+
+If you want to use different mappings, map your keys to the &lt;Plug&gt;(Change...)
+and &lt;Plug&gt;(Delete...) mapping targets _before_ sourcing the script (e.g. in
+your vimrc):
 
     nmap <Leader>c <Plug>(ChangeGloballyOperator)
     nmap <Leader>cc <Plug>(ChangeGloballyLine)
@@ -190,17 +286,25 @@ _before_ sourcing the script (e.g. in your vimrc):
     nmap <Leader>xx <Plug>(DeleteGloballyLine)
     xmap <Leader>x <Plug>(DeleteGloballyVisual)
 
+    nmap gc* <Plug>(ChangeWholeWordOperator)
+    nmap gx* <Plug>(DeleteWholeWordOperator)
+    nmap gcg* <Plug>(ChangeWordOperator)
+    nmap gxg* <Plug>(DeleteWordOperator)
+    nmap gc<A-8> <Plug>(ChangeWholeWORDOperator)
+    nmap gx<A-8> <Plug>(DeleteWholeWORDOperator)
+    nmap gcg<A-8> <Plug>(ChangeWORDOperator)
+    nmap gxg<A-8> <Plug>(DeleteWORDOperator)
+    nmap <Leader>gc <Plug>(ChangeOperatorOperator)
+    nmap <Leader>gx <Plug>(DeleteOperatorOperator)
+    xmap <Leader>gc <Plug>(ChangeSelectionOperator)
+    xmap <Leader>gx <Plug>(DeleteSelectionOperator)
+
 LIMITATIONS
 ------------------------------------------------------------------------------
 
 - During the insertion, insert-mode mappings that use i\_CTRL-O cause an
   InsertLeave event, and therefore trigger the global change -- prematurely,
   as perceived by the user who isn't aware of this.
-
-### TODO
-
-- Implement special case for the black-hole register, where we cannot extract
-  the original text.
 
 ### CONTRIBUTING
 
@@ -210,6 +314,18 @@ below).
 
 HISTORY
 ------------------------------------------------------------------------------
+
+##### 2.00    RELEASEME
+- ENH: Add a set of mappings that apply the change / deletion of cword / cWORD
+  / selection over the text moved over by {motion}. So instead of specifying
+  the source text via {motion}, the target area is specified. There's even a
+  mapping that lets you specify both source and target as two {motion}s!
+- Implement special case for the black-hole register, where we cannot extract
+  the original text.
+- ENH: Allow to disable all default mappings via a single
+  g:ChangeGlobally\_no\_mappings configuration flag.
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.040!__
 
 ##### 1.31    03-Nov-2018
 - BUG: When a {N}gc{motion} substitution is repeated, is it applied only to
@@ -243,7 +359,9 @@ HISTORY
   linewise selection, now [count] number of lines instead of [count] times the
   original selection is used.
 - Avoid changing the jumplist.
-- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)). __You need to separately
+- Add dependency to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)).
+
+__You need to separately
   install ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.011 (or higher)!__
 
 ##### 1.10    19-Jan-2013 (unreleased)
@@ -262,7 +380,7 @@ insert and using the original start position instead of the start change mark.
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2012-2018 Ingo Karkat -
+Copyright: (C) 2012-2019 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
-Maintainer:     Ingo Karkat <ingo@karkat.de>
+Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;

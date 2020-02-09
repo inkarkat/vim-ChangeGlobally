@@ -1,14 +1,11 @@
 " ChangeGlobally.vim: Change {motion} text and repeat the substitution.
 "
 " DEPENDENCIES:
-"   - ingo/msg.vim autoload script
-"   - ingo/search/buffer.vim autoload script
-"   - ingo/text.vim autoload script
-"   - repeat.vim (vimscript #2136) autoload script (optional)
-"   - visualrepeat.vim (vimscript #3848) autoload script (optional)
-"   - visualrepeat/reapply.vim autoload script (optional)
+"   - ingo-library.vim plugin
+"   - repeat.vim (vimscript #2136) plugin (optional)
+"   - visualrepeat.vim (vimscript #3848) plugin (optional)
 "
-" Copyright: (C) 2012-2018 Ingo Karkat
+" Copyright: (C) 2012-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -16,6 +13,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
+    let s:pos = getpos('.')
     let s:isDelete = a:isDelete
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
@@ -36,7 +34,7 @@ function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMap
 	unlet! s:SubstitutionHook
     endif
 endfunction
-function! s:ArmInsertMode()
+function! s:ArmInsertMode( search, replace )
     " Autocmds may interfere with the plugin when they temporarily leave insert
     " mode (i_CTRL-O) or create an undo point (i_CTRL-G_u). Disable them until
     " the user is done inserting.
@@ -52,7 +50,7 @@ function! s:ArmInsertMode()
     endif
 
     augroup ChangeGlobally
-	autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute()
+	execute printf('autocmd! InsertLeave * call ChangeGlobally#UnarmInsertMode() | call ChangeGlobally#Substitute(%s, %s)', string(a:search), string(a:replace))
     augroup END
 endfunction
 function! ChangeGlobally#UnarmInsertMode()
@@ -63,7 +61,17 @@ function! ChangeGlobally#UnarmInsertMode()
 	unlet s:save_eventignore
     endif
 endfunction
-function! ChangeGlobally#Operator( type )
+function! s:DeleteChangedText( deleteCommand ) abort
+    " Need special case for "_ to still obtain the deleted text (without
+    " permanently clobbering the register).
+    if s:register ==# '_'
+	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:deleteCommand . '" | return getreg("\"")')
+    else
+	execute 'normal! "' . s:register . a:deleteCommand
+	return getreg(s:register)
+    endif
+endfunction
+function! ChangeGlobally#SourceOperator( type )
     let l:isAtEndOfLine = 0
 
     if a:type ==# 'v'
@@ -91,10 +99,19 @@ function! ChangeGlobally#Operator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:deleteCommand = (s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
-
-    " TODO: Special case for "_
-    execute 'normal! "' . s:register . l:deleteCommand
+    let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+    let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
+    " Only apply the substitution [count] times. We do this via a
+    " replace-expression that counts the number of replacements; unlike a
+    " repeated single substitution, this avoids the issue of re-replacing.
+    " We also do this for the global (line / buffer) substitution without a
+    " [count] in order to determine whether there actually were other matches.
+    " If not, we indicate this with a beep.
+    " Note: We cannot simply pass in the replacement via string(s:newText); it
+    " may contain the / substitution separator, which must not appear at all in
+    " the expression. Therefore, we store this in a variable and directly
+    " reference it from ChangeGlobally#CountedReplace().
+    let l:replace = '\=ChangeGlobally#CountedReplace()'
 
     if s:isDelete
 	" For a global deletion, we don't need to set up and go to insert mode;
@@ -104,7 +121,7 @@ function! ChangeGlobally#Operator( type )
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
-	call ChangeGlobally#Substitute()
+	call ChangeGlobally#Substitute(l:search, l:replace)
 	return
     endif
 
@@ -119,10 +136,132 @@ function! ChangeGlobally#Operator( type )
     " Don't set up the repeat; we're not done yet. We now install an autocmd,
     " and the ChangeGlobally#Substitute() will conclude the command, and set the
     " repeat there.
-    call s:ArmInsertMode()
+    call s:ArmInsertMode(l:search, l:replace)
 endfunction
-function! ChangeGlobally#OperatorExpression()
-    set opfunc=ChangeGlobally#Operator
+function! s:GoToSource( sourcePattern ) abort
+    if empty(a:sourcePattern)
+	" Assume visual selection.
+	let [l:lnum, l:col] = ingo#selection#GetExclusiveEndPos()[1:2]
+	return [1, (len(getline(l:lnum)) == l:col - 1)]
+    endif
+
+    call setpos('.', s:pos)
+    " Like * and <cword>, search forward within the current line if not yet on
+    " the source.
+    if search(a:sourcePattern, 'cW', line('.')) > 0
+	return [1, (search('\%#' . a:sourcePattern . '\+$', 'cnW', line('.')) > 0)]
+    else
+	return [0, 0]
+    endif
+endfunction
+function! ChangeGlobally#WholeWordSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\k', 'iw', function('ingo#regexp#MakeWholeWordSearch'), a:type)
+endfunction
+function! ChangeGlobally#WordSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\k', 'iw', '', a:type)
+endfunction
+function! ChangeGlobally#WholeWORDSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\S', 'iW', function('ingo#regexp#MakeWholeWORDSearch'), a:type)
+endfunction
+function! ChangeGlobally#WORDSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('\S', 'iW', '', a:type)
+endfunction
+function! ChangeGlobally#OperatorSourceOperatorTarget( type )
+    " Turn the {motion} into a visual selection, then follow the path of
+    " changing / deleting the selected text in {motion} text.
+    if a:type ==# 'char'
+	silent! execute 'normal! g`[vg`]'. (&selection ==# 'exclusive' ? 'l' : '') . "\<C-\>\<C-n>"
+    elseif a:type ==# 'line'
+	silent! execute "normal! g'[Vg']\<C-\>\<C-n>"
+    elseif a:type ==# 'block'
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+	return
+    endif
+
+    " The {source-motion} changed the cursor position, but we want the
+    " {target-motion} to start from the original one. Fortunately, that already
+    " got recorded so we can jump back to it.
+    call setpos('.', s:pos)
+
+    " Query the second {target-motion} now. We have to use feedkeys() for that.
+    let &opfunc = 'ChangeGlobally#SelectionSourceOperatorTarget'
+    call feedkeys('g@', 'ni')
+endfunction
+function! ChangeGlobally#SelectionSourceOperatorTarget( type )
+    call s:GivenSourceOperatorTarget('', ":normal! gv\<CR>", '', a:type)
+endfunction
+function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceToPatternFuncref, type )
+    let s:range = 'area'
+    let s:area = ingo#change#virtcols#Get(a:type)
+    let [l:isFound, l:isAtEndOfLine] = s:GoToSource(a:sourcePattern)
+    if ! l:isFound
+	call ingo#msg#ErrorMsg('No string under cursor')
+	return
+    endif
+
+    let l:changedText = s:DeleteChangedText('d' . a:sourceTextObject)
+    let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
+    if ! empty(a:SourceToPatternFuncref)
+	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
+    endif
+
+    " Only apply the substitution [count] times within the area covered by
+    " {[target-]motion}. For that, we also need a replace-expression here.
+    " As we need to do the evaluation and actual replacement in two stages, and
+    " the hook can only inspect the l:replace value, pass the second stage as a
+    " quoted argument.
+    let l:replace = '\=ChangeGlobally#CountedAreaReplace("ChangeGlobally#AreaReplaceSecondPass()")'
+
+    if s:isDelete
+	" For a global deletion, we don't need to set up and go to insert mode;
+	" just record what got deleted, and reapply that.
+
+	" Not needed for deletion.
+	let s:originalChangeNr = -1
+	let s:insertStartPos = [0,0]
+
+	call ChangeGlobally#Substitute(l:search, l:replace)
+	return
+    endif
+
+    let s:originalChangeNr = changenr()
+    let s:insertStartPos = getpos("'[")[1:2]
+    if l:isAtEndOfLine
+	startinsert!
+    else
+	startinsert
+    endif
+
+    " Don't set up the repeat; we're not done yet. We now install an autocmd,
+    " and the ChangeGlobally#Substitute() will conclude the command, and set the
+    " repeat there.
+    call s:ArmInsertMode(l:search, l:replace)
+endfunction
+function! ChangeGlobally#RepeatOperatorTarget( type )
+    let s:range = 'area'
+    let s:area = ingo#change#virtcols#Get(a:type)
+
+    let l:range = s:area.startLnum . ',' . s:area.endLnum
+    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+    endif
+endfunction
+function! ChangeGlobally#VisualRepeat()
+    let s:range = 'area'
+    let s:area = ingo#selection#virtcols#Get()
+
+    let l:range = s:area.startLnum . ',' . s:area.endLnum
+    if s:Substitute(l:range, s:locationRestriction, s:substitution) == 0
+	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
+    endif
+
+    " From now on, normal mode repeat does not target the g@ area, but a
+    " same-sized visual selection. To obtain that, we have to change the repeat
+    " mapping.
+    silent! call repeat#set("\<Plug>(ChangeAreaVisualRepeat)")
+endfunction
+function! ChangeGlobally#OperatorExpression( opfunc )
+    let &opfunc = a:opfunc
 
     let l:keys = 'g@'
 
@@ -177,6 +316,7 @@ function! s:LastReplaceInit()
     let s:lastReplaceCnt = 0
     let s:lastReplacementLnum = line('.')
     let s:lastReplacementLines = {}
+    let s:lastReplacementDecisions = []
 endfunction
 function! ChangeGlobally#CountedReplace()
     if ! s:count || s:lastReplaceCnt < s:count
@@ -187,6 +327,40 @@ function! ChangeGlobally#CountedReplace()
     else
 	return submatch(0)
     endif
+endfunction
+function! s:IsInsideArea( lnum, startVirtCol, endVirtCol ) abort
+    if s:area.mode ==# 'v'
+	return
+	\   (a:lnum > s:area.startLnum && a:lnum < s:area.endLnum) ||
+	\   (a:lnum == s:area.startLnum && a:startVirtCol >= s:area.startVirtCol) ||
+	\   (a:lnum == s:area.endLnum && a:endVirtCol <= s:area.effectiveEndVirtCol)
+    elseif s:area.mode ==# 'V'
+	return (a:lnum >= s:area.startLnum && a:lnum <= s:area.endLnum)
+    else
+	return
+	\   (a:lnum >= s:area.startLnum && a:lnum <= s:area.endLnum) &&
+	\   (a:startVirtCol >= s:area.startVirtCol && a:endVirtCol <= s:area.effectiveEndVirtCol)
+    endif
+endfunction
+function! ChangeGlobally#CountedAreaReplace( ... )
+    if (! s:count || s:lastReplaceCnt < s:count) &&
+    \   s:IsInsideArea(line('.'), virtcol('.'), virtcol('.') + ingo#compat#strdisplaywidth(submatch(0), virtcol('.') - 1) - 1)
+	let s:lastReplaceCnt += 1
+	let s:lastReplacementLnum = line('.')
+	let s:lastReplacementLines[line('.')] = 1
+
+	" Doing the replacement now would affect all further area inclusion
+	" tests. Therefore, just record the decision now and do the actual
+	" replacement in a second pass in
+	" ChangeGlobally#AreaReplaceSecondPass().
+	call add(s:lastReplacementDecisions, 1)
+    else
+	call add(s:lastReplacementDecisions, 0)
+    endif
+    return submatch(0)
+endfunction
+function! ChangeGlobally#AreaReplaceSecondPass() abort
+    return (remove(s:lastReplacementDecisions, 0) ? s:newText : submatch(0))
 endfunction
 function! s:Report( replaceCnt, replacementLines )
     if a:replacementLines >= &report
@@ -202,7 +376,7 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
     let l:substitutionCommand = a:range . 'substitute/' . a:localRestriction . join(a:substitutionArguments, '') . 'e'
 "****D echomsg '****' l:substitutionCommand string(s:newText)
     call s:LastReplaceInit()
-    if s:count
+    if s:count || s:range ==# 'area'
 	" It would be nice if we could abort the :substitution when the
 	" s:lastReplaceCnt has been reached. Unfortunately, throwing an
 	" exception from ChangeGlobally#CountedReplace() will still substitute
@@ -211,6 +385,23 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
 	" Because of this, the "N substitutions on M lines" will also be wrong.
 	" We have to suppress the original message and emulate that, too.
 	silent execute l:substitutionCommand
+
+	if s:lastReplaceCnt > 0 && a:substitutionArguments[4] =~# '=ChangeGlobally#CountedAreaReplace('
+	    " The area replacement only records the locations on the first pass,
+	    " to avoid modifying the size of the area. (We cannot use the trick
+	    " of doing the replacements from last to first with :substitute.)
+	    " Do the replacements only in a second pass (this time without the
+	    " :s_c confirm flag).
+	    let l:secondPassSubstitutionArguments = copy(a:substitutionArguments)
+	    " Extract the dummy quoted function call (that is ignored by
+	    " ChangeGlobally#CountedAreaReplace(), but needs to be passed so
+	    " that the hook can replace it) and call that one now.
+	    let l:secondPassSubstitutionArguments[4] = '\=' . matchstr(l:secondPassSubstitutionArguments[4], '^.*(\([''"]\)\zs.*\ze\1)$')
+	    let l:secondPassSubstitutionArguments[-1] = ingo#str#trd(l:secondPassSubstitutionArguments[-1], 'c')
+	    let l:substitutionCommand = a:range . 'substitute/' . a:localRestriction . join(l:secondPassSubstitutionArguments, '') . 'e'
+	    silent execute l:substitutionCommand
+	endif
+
 	execute 'keepjumps normal!' s:lastReplacementLnum . 'G^'
 
 	call s:Report(s:lastReplaceCnt, len(s:lastReplacementLines))
@@ -220,10 +411,9 @@ function! s:Substitute( range, localRestriction, substitutionArguments )
 
     return s:lastReplaceCnt
 endfunction
-function! ChangeGlobally#Substitute()
+function! ChangeGlobally#Substitute( search, replace )
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
-    let l:changedText = getreg(s:register)
     if s:isDelete
 	let l:hasAbortedInsert = 1
 	let s:newText = ''
@@ -238,33 +428,22 @@ function! ChangeGlobally#Substitute()
 	endif
     endif
 "****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
-"****D echomsg '**** subst' string(l:changedText) string(@.) string(s:newText)
+"****D echomsg '**** subst' string(a:search) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
-    let l:search = '\V\C' . substitute(escape(l:changedText, '/\'), '\n', '\\n', 'g')
-
-    " Only apply the substitution [count] times. We do this via a
-    " replace-expression that counts the number of replacements; unlike a
-    " repeated single substitution, this avoids the issue of re-replacing.
-    " We also do this for the global (line / buffer) substitution without a
-    " [count] in order to determine whether there actually were other matches.
-    " If not, we indicate this with a beep.
-    " Note: We cannot simply pass in the replacement via string(s:newText); it
-    " may contain the / substitution separator, which must not appear at all in
-    " the expression. Therefore, we store this in a variable and directly
-    " reference it from ChangeGlobally#CountedReplace().
-    let l:replace = '\=ChangeGlobally#CountedReplace()'
+    let l:search = a:search
+    let l:replace = a:replace
 
 
     " To turn the change and following substitutions into a single change, first
     " undo the deletion and insertion. (I couldn't get them combined with
     " :undojoin across the :startinsert.)
-    " This also solves the special case when l:changedText is contained in
+    " This also solves the special case when the changed text is contained in
     " s:newText; without the undo, we would need to avoid re-applying the
     " substitution over the just changed part of the line.
     if ! l:hasAbortedInsert
 	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
     endif
-    silent undo " the deletion of l:changedText
+    silent undo " the deletion of the changed text
 
 
     if exists('s:SubstitutionHook')
@@ -281,7 +460,7 @@ function! ChangeGlobally#Substitute()
     let s:locationRestriction = ''
     let s:isBeyondLineSubstitution = 1
     if s:range ==# 'line'
-	if ! s:isVisualMode && ingo#search#buffer#IsKeywordMatch(l:changedText, l:changeStartVirtCol)
+	if ! s:isVisualMode && ingo#search#buffer#IsKeywordMatch(l:search, l:changeStartVirtCol)
 	    " When the changed text is surrounded by keyword boundaries, only
 	    " perform keyword replacements to avoid replacing other matches
 	    " inside keywords (e.g. "in" inside "ring").
@@ -330,6 +509,9 @@ function! ChangeGlobally#Substitute()
 	endif
 
 	let l:range = (s:count ? '.,$' : '%')
+    elseif s:range ==# 'area'
+	let s:substitution = ['', l:search, '', '/', l:replace, '/', 'g' . (s:isConfirm ? 'c' : '')]
+	let l:range = s:area.startLnum . ',' . s:area.endLnum
     else
 	throw 'ASSERT: Invalid s:range: ' . string(s:range)
     endif
