@@ -5,7 +5,7 @@
 "   - repeat.vim (vimscript #2136) plugin (optional)
 "   - visualrepeat.vim (vimscript #3848) plugin (optional)
 "
-" Copyright: (C) 2012-2019 Ingo Karkat
+" Copyright: (C) 2012-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -167,16 +167,14 @@ function! ChangeGlobally#WORDSourceOperatorTarget( type )
     call s:GivenSourceOperatorTarget('\S', 'iW', '', a:type)
 endfunction
 function! ChangeGlobally#OperatorSourceOperatorTarget( type )
-    " Turn the {motion} into a visual selection, then follow the path of
-    " changing / deleting the selected text in {motion} text.
-    if a:type ==# 'char'
-	silent! execute 'normal! g`[vg`]'. (&selection ==# 'exclusive' ? 'l' : '') . "\<C-\>\<C-n>"
-    elseif a:type ==# 'line'
-	silent! execute "normal! g'[Vg']\<C-\>\<C-n>"
-    elseif a:type ==# 'block'
+    " Record the {motion} (don't use visual mode; that would prevent the user
+    " from using "gv" as the target operator!), then follow the path of changing
+    " / deleting the selected text in {motion} text.
+    if a:type ==# 'block'
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	return
     endif
+    let s:sourceArea = [getpos("'[")[1:2], getpos("']")[1:2], (a:type ==# 'char' ? 'v' : 'V')]
 
     " The {source-motion} changed the cursor position, but we want the
     " {target-motion} to start from the original one. Fortunately, that already
@@ -184,8 +182,17 @@ function! ChangeGlobally#OperatorSourceOperatorTarget( type )
     call setpos('.', s:pos)
 
     " Query the second {target-motion} now. We have to use feedkeys() for that.
-    let &opfunc = 'ChangeGlobally#SelectionSourceOperatorTarget'
+    let &opfunc = 'ChangeGlobally#AreaSourceOperatorTarget'
     call feedkeys('g@', 'ni')
+endfunction
+function! ChangeGlobally#AreaSourceOperatorTarget( type ) abort
+    call call('cursor', s:sourceArea[0])
+    silent! execute 'normal!' s:sourceArea[2]
+    call call('cursor', s:sourceArea[1])
+    silent! execute 'normal!' (s:sourceArea[2] ==# 'v' && &selection ==# 'exclusive' ? 'l' : '') . "\<C-\>\<C-n>"
+    unlet s:sourceArea
+
+    call ChangeGlobally#SelectionSourceOperatorTarget(a:type)
 endfunction
 function! ChangeGlobally#SelectionSourceOperatorTarget( type )
     call s:GivenSourceOperatorTarget('', ":normal! gv\<CR>", '', a:type)

@@ -323,6 +323,11 @@ below).
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
+2.01	RELEASEME
+- Support {target-motion} of |gv| in <Leader>gc and <Leader>gx to replace in
+  the last selection. (Previously, the {source-motion} clobbered the
+  user-established visual selection.)
+
 2.00	09-Feb-2020
 - ENH: Add a set of mappings that apply the change / deletion of cword / cWORD
   / selection over the text moved over by {motion}. So instead of specifying
