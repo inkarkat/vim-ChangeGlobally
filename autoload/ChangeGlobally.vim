@@ -524,7 +524,7 @@ function! ChangeGlobally#Substitute( search, replace )
 	    " entire lines are substituted. Were we to alternatively append a \r
 	    " to the replacement, the next line would be involved and the cursor
 	    " misplaced.
-	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '\$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
 	endif
 
 	let l:range = (s:count ? '.,$' : '%')

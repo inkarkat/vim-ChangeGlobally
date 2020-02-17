@@ -320,6 +320,8 @@ HISTORY
   the last selection. (Previously, the {source-motion} clobbered the
   user-established visual selection.)
 - The custom operators don't clobber the previous visual selection any longer.
+- BUG: Regression: gcc and gxx broken by forgotten adaptation of regexp
+  magicness.
 
 ##### 2.00    09-Feb-2020
 - ENH: Add a set of mappings that apply the change / deletion of cword / cWORD
