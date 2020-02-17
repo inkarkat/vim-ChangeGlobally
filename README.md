@@ -319,6 +319,7 @@ HISTORY
 - Support {target-motion} of gv in &lt;Leader&gt;gc and &lt;Leader&gt;gx to replace in
   the last selection. (Previously, the {source-motion} clobbered the
   user-established visual selection.)
+- The custom operators don't clobber the previous visual selection any longer.
 
 ##### 2.00    09-Feb-2020
 - ENH: Add a set of mappings that apply the change / deletion of cword / cWORD

@@ -100,6 +100,7 @@ function! ChangeGlobally#SourceOperator( type )
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
     let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
@@ -121,6 +122,7 @@ function! ChangeGlobally#SourceOperator( type )
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
+	call s:OperatorFinally()
 	call ChangeGlobally#Substitute(l:search, l:replace)
 	return
     endif
@@ -203,6 +205,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
     let [l:isFound, l:isAtEndOfLine] = s:GoToSource(a:sourcePattern)
     if ! l:isFound
 	call ingo#msg#ErrorMsg('No string under cursor')
+	call s:OperatorFinally()
 	return
     endif
 
@@ -227,6 +230,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
+	call s:OperatorFinally()
 	call ChangeGlobally#Substitute(l:search, l:replace)
 	return
     endif
@@ -268,6 +272,7 @@ function! ChangeGlobally#VisualRepeat()
     silent! call repeat#set("\<Plug>(ChangeAreaVisualRepeat)")
 endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
+    let s:save_visualarea = [getpos("'<"), getpos("'>"), visualmode()]
     let &opfunc = a:opfunc
 
     let l:keys = 'g@'
@@ -281,6 +286,12 @@ function! ChangeGlobally#OperatorExpression( opfunc )
     endif
 
     return l:keys
+endfunction
+function! s:OperatorFinally() abort
+    if exists('s:save_visualarea')
+	call call('ingo#selection#Set', s:save_visualarea)
+	unlet s:save_visualarea
+    endif
 endfunction
 
 function! s:GetInsertion( range, isMultiChangeInsert )
@@ -451,6 +462,7 @@ function! ChangeGlobally#Substitute( search, replace )
 	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
     endif
     silent undo " the deletion of the changed text
+    call s:OperatorFinally()
 
 
     if exists('s:SubstitutionHook')
