@@ -323,7 +323,7 @@ below).
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
-2.01	RELEASEME
+2.01	24-Feb-2020
 - Support {target-motion} of |gv| in <Leader>gc and <Leader>gx to replace in
   the last selection. (Previously, the {source-motion} clobbered the
   user-established visual selection.)
