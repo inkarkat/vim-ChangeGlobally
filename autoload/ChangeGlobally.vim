@@ -5,7 +5,7 @@
 "   - repeat.vim (vimscript #2136) plugin (optional)
 "   - visualrepeat.vim (vimscript #3848) plugin (optional)
 "
-" Copyright: (C) 2012-2019 Ingo Karkat
+" Copyright: (C) 2012-2020 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -100,6 +100,7 @@ function! ChangeGlobally#SourceOperator( type )
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
     let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     " Only apply the substitution [count] times. We do this via a
     " replace-expression that counts the number of replacements; unlike a
@@ -121,6 +122,7 @@ function! ChangeGlobally#SourceOperator( type )
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
+	call s:OperatorFinally()
 	call ChangeGlobally#Substitute(l:search, l:replace)
 	return
     endif
@@ -167,16 +169,14 @@ function! ChangeGlobally#WORDSourceOperatorTarget( type )
     call s:GivenSourceOperatorTarget('\S', 'iW', '', a:type)
 endfunction
 function! ChangeGlobally#OperatorSourceOperatorTarget( type )
-    " Turn the {motion} into a visual selection, then follow the path of
-    " changing / deleting the selected text in {motion} text.
-    if a:type ==# 'char'
-	silent! execute 'normal! g`[vg`]'. (&selection ==# 'exclusive' ? 'l' : '') . "\<C-\>\<C-n>"
-    elseif a:type ==# 'line'
-	silent! execute "normal! g'[Vg']\<C-\>\<C-n>"
-    elseif a:type ==# 'block'
+    " Record the {motion} (don't use visual mode; that would prevent the user
+    " from using "gv" as the target operator!), then follow the path of changing
+    " / deleting the selected text in {motion} text.
+    if a:type ==# 'block'
 	execute "normal! \<C-\>\<C-n>\<Esc>" | " Beep.
 	return
     endif
+    let s:sourceArea = [getpos("'[")[1:2], getpos("']")[1:2], (a:type ==# 'char' ? 'v' : 'V')]
 
     " The {source-motion} changed the cursor position, but we want the
     " {target-motion} to start from the original one. Fortunately, that already
@@ -184,8 +184,17 @@ function! ChangeGlobally#OperatorSourceOperatorTarget( type )
     call setpos('.', s:pos)
 
     " Query the second {target-motion} now. We have to use feedkeys() for that.
-    let &opfunc = 'ChangeGlobally#SelectionSourceOperatorTarget'
+    let &opfunc = 'ChangeGlobally#AreaSourceOperatorTarget'
     call feedkeys('g@', 'ni')
+endfunction
+function! ChangeGlobally#AreaSourceOperatorTarget( type ) abort
+    call call('cursor', s:sourceArea[0])
+    silent! execute 'normal!' s:sourceArea[2]
+    call call('cursor', s:sourceArea[1])
+    silent! execute 'normal!' (s:sourceArea[2] ==# 'v' && &selection ==# 'exclusive' ? 'l' : '') . "\<C-\>\<C-n>"
+    unlet s:sourceArea
+
+    call ChangeGlobally#SelectionSourceOperatorTarget(a:type)
 endfunction
 function! ChangeGlobally#SelectionSourceOperatorTarget( type )
     call s:GivenSourceOperatorTarget('', ":normal! gv\<CR>", '', a:type)
@@ -196,6 +205,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
     let [l:isFound, l:isAtEndOfLine] = s:GoToSource(a:sourcePattern)
     if ! l:isFound
 	call ingo#msg#ErrorMsg('No string under cursor')
+	call s:OperatorFinally()
 	return
     endif
 
@@ -220,6 +230,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	let s:originalChangeNr = -1
 	let s:insertStartPos = [0,0]
 
+	call s:OperatorFinally()
 	call ChangeGlobally#Substitute(l:search, l:replace)
 	return
     endif
@@ -261,6 +272,7 @@ function! ChangeGlobally#VisualRepeat()
     silent! call repeat#set("\<Plug>(ChangeAreaVisualRepeat)")
 endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
+    let s:save_visualarea = [getpos("'<"), getpos("'>"), visualmode()]
     let &opfunc = a:opfunc
 
     let l:keys = 'g@'
@@ -274,6 +286,12 @@ function! ChangeGlobally#OperatorExpression( opfunc )
     endif
 
     return l:keys
+endfunction
+function! s:OperatorFinally() abort
+    if exists('s:save_visualarea')
+	call call('ingo#selection#Set', s:save_visualarea)
+	unlet s:save_visualarea
+    endif
 endfunction
 
 function! s:GetInsertion( range, isMultiChangeInsert )
@@ -444,6 +462,7 @@ function! ChangeGlobally#Substitute( search, replace )
 	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
     endif
     silent undo " the deletion of the changed text
+    call s:OperatorFinally()
 
 
     if exists('s:SubstitutionHook')
@@ -505,7 +524,7 @@ function! ChangeGlobally#Substitute( search, replace )
 	    " entire lines are substituted. Were we to alternatively append a \r
 	    " to the replacement, the next line would be involved and the cursor
 	    " misplaced.
-	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '\$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
 	endif
 
 	let l:range = (s:count ? '.,$' : '%')

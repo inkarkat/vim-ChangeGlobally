@@ -315,7 +315,15 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 2.00    RELEASEME
+##### 2.01    24-Feb-2020
+- Support {target-motion} of gv in &lt;Leader&gt;gc and &lt;Leader&gt;gx to replace in
+  the last selection. (Previously, the {source-motion} clobbered the
+  user-established visual selection.)
+- The custom operators don't clobber the previous visual selection any longer.
+- BUG: Regression: gcc and gxx broken by forgotten adaptation of regexp
+  magicness.
+
+##### 2.00    09-Feb-2020
 - ENH: Add a set of mappings that apply the change / deletion of cword / cWORD
   / selection over the text moved over by {motion}. So instead of specifying
   the source text via {motion}, the target area is specified. There's even a
@@ -380,7 +388,7 @@ insert and using the original start position instead of the start change mark.
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2012-2019 Ingo Karkat -
+Copyright: (C) 2012-2020 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
