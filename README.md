@@ -315,7 +315,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 2.01    RELEASEME
+##### 2.01    24-Feb-2020
 - Support {target-motion} of gv in &lt;Leader&gt;gc and &lt;Leader&gt;gx to replace in
   the last selection. (Previously, the {source-motion} clobbered the
   user-established visual selection.)
