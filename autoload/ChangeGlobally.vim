@@ -14,7 +14,7 @@ set cpo&vim
 
 function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
     let s:pos = getpos('.')
-    let s:isDelete = a:isDelete
+    let s:isChange = ! a:isDelete
     let s:register = v:register
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
@@ -99,7 +99,7 @@ function! ChangeGlobally#SourceOperator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:changedText = s:GetChangedText(s:isDelete ? 'y' : (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>"))
+    let l:changedText = s:GetChangedText(s:isChange ? (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>") : 'y')
 
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     " Only apply the substitution [count] times. We do this via a
@@ -114,7 +114,7 @@ function! ChangeGlobally#SourceOperator( type )
     " reference it from ChangeGlobally#CountedReplace().
     let l:replace = '\=ChangeGlobally#CountedReplace()'
 
-    if s:isDelete
+    if ! s:isChange
 	" For a global deletion, we don't need to set up and go to insert mode;
 	" just record what got deleted, and reapply that.
 
@@ -209,7 +209,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	return
     endif
 
-    let l:changedText = s:GetChangedText((s:isDelete ? 'y': 'd') . a:sourceTextObject)
+    let l:changedText = s:GetChangedText((s:isChange ? 'd': 'y') . a:sourceTextObject)
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     if ! empty(a:SourceToPatternFuncref)
 	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
@@ -222,7 +222,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
     " quoted argument.
     let l:replace = '\=ChangeGlobally#CountedAreaReplace("ChangeGlobally#AreaReplaceSecondPass()")'
 
-    if s:isDelete
+    if ! s:isChange
 	" For a global deletion, we don't need to set up and go to insert mode;
 	" just record what got deleted, and reapply that.
 
@@ -432,9 +432,7 @@ endfunction
 function! ChangeGlobally#Substitute( search, replace )
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
-    if s:isDelete
-	let s:newText = ''
-    else
+    if s:isChange
 	let l:hasAbortedInsert = (changenr() <= s:originalChangeNr)
 	let l:isMultiChangeInsert = (changenr() > s:originalChangeNr + 1)
 	let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
@@ -454,6 +452,8 @@ function! ChangeGlobally#Substitute( search, replace )
 	    execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
 	endif
 	silent undo " the deletion of the changed text
+    else
+	let s:newText = ''
     endif
 "****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.)
 "****D echomsg '**** subst' string(a:search) string(@.) string(s:newText)
@@ -513,17 +513,17 @@ function! ChangeGlobally#Substitute( search, replace )
 	" use '[, '] instead of the . range.
 	let l:range = (s:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
     elseif s:range ==# 'buffer'
-	if s:isDelete
-	    " Keep the trailing newline so that the entire line(s) are deleted
-	    " without leaving an empty line behind.
-	    let s:substitution = ['^', l:search, '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
-	else
+	if s:isChange
 	    " We need to remove the trailing newline in the search pattern and
 	    " anchor the search to the beginning and end of a line, so that only
 	    " entire lines are substituted. Were we to alternatively append a \r
 	    " to the replacement, the next line would be involved and the cursor
 	    " misplaced.
 	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	else
+	    " Keep the trailing newline so that the entire line(s) are deleted
+	    " without leaving an empty line behind.
+	    let s:substitution = ['^', l:search, '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
 	endif
 
 	let l:range = (s:count ? '.,$' : '%')
