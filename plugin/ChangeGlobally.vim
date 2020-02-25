@@ -87,29 +87,35 @@ nnoremap <silent> <Plug>(ChangeGloballyVisualRepeat)
 "- Change cword / cWORD / selection / moved-over text over the moved-over area -
 
 nnoremap <silent> <expr> <SID>(ChangeWholeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWordSourceOperatorTarget')
-nnoremap <silent> <script> <Plug>(ChangeWholeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
-nnoremap <silent> <script> <Plug>(DeleteWholeWordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
+nnoremap <silent> <script> <Plug>(ChangeWholeWordOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
+nnoremap <silent> <script> <Plug>(DeleteWholeWordOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
+nnoremap <silent> <script> <Plug>(RegisterWholeWordOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWordOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WordSourceOperatorTarget')
-nnoremap <silent> <script> <Plug>(ChangeWordOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
-nnoremap <silent> <script> <Plug>(DeleteWordOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
+nnoremap <silent> <script> <Plug>(ChangeWordOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
+nnoremap <silent> <script> <Plug>(DeleteWordOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
+nnoremap <silent> <script> <Plug>(RegisterWordOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeWholeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWORDSourceOperatorTarget')
-nnoremap <silent> <script> <Plug>(ChangeWholeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
-nnoremap <silent> <script> <Plug>(DeleteWholeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
+nnoremap <silent> <script> <Plug>(ChangeWholeWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
+nnoremap <silent> <script> <Plug>(DeleteWholeWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
+nnoremap <silent> <script> <Plug>(RegisterWholeWORDOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WORDSourceOperatorTarget')
-nnoremap <silent> <script> <Plug>(ChangeWORDOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
-nnoremap <silent> <script> <Plug>(DeleteWORDOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
+nnoremap <silent> <script> <Plug>(ChangeWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
+nnoremap <silent> <script> <Plug>(DeleteWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
+nnoremap <silent> <script> <Plug>(RegisterWORDOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
 
 
 nnoremap <silent> <expr> <SID>(ChangeOperatorOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#OperatorSourceOperatorTarget')
-nnoremap <silent> <script> <Plug>(ChangeOperatorOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
-nnoremap <silent> <script> <Plug>(DeleteOperatorOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
+nnoremap <silent> <script> <Plug>(ChangeOperatorOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
+nnoremap <silent> <script> <Plug>(DeleteOperatorOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
+nnoremap <silent> <script> <Plug>(RegisterOperatorOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeSelectionOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SelectionSourceOperatorTarget')
-vnoremap <silent> <script> <Plug>(ChangeSelectionOperator) :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
-vnoremap <silent> <script> <Plug>(DeleteSelectionOperator) :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
+vnoremap <silent> <script> <Plug>(ChangeSelectionOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
+vnoremap <silent> <script> <Plug>(DeleteSelectionOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
+vnoremap <silent> <script> <Plug>(RegisterSelectionOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
 
 
 
@@ -168,11 +174,17 @@ if ! exists('g:ChangeGlobally_no_mappings')
     if ! hasmapto('<Plug>(DeleteWholeWordOperator)', 'n')
 	nmap gx* <Plug>(DeleteWholeWordOperator)
     endif
+    if ! hasmapto('<Plug>(RegisterWholeWordOperator)', 'n')
+	nmap gr* <Plug>(RegisterWholeWordOperator)
+    endif
     if ! hasmapto('<Plug>(ChangeWordOperator)', 'n')
 	nmap gcg* <Plug>(ChangeWordOperator)
     endif
     if ! hasmapto('<Plug>(DeleteWordOperator)', 'n')
 	nmap gxg* <Plug>(DeleteWordOperator)
+    endif
+    if ! hasmapto('<Plug>(RegisterWordOperator)', 'n')
+	nmap gxg* <Plug>(RegisterWordOperator)
     endif
     if ! hasmapto('<Plug>(ChangeWholeWORDOperator)', 'n')
 	nmap gc<A-8> <Plug>(ChangeWholeWORDOperator)
@@ -180,11 +192,17 @@ if ! exists('g:ChangeGlobally_no_mappings')
     if ! hasmapto('<Plug>(DeleteWholeWORDOperator)', 'n')
 	nmap gx<A-8> <Plug>(DeleteWholeWORDOperator)
     endif
+    if ! hasmapto('<Plug>(RegisterWholeWORDOperator)', 'n')
+	nmap gr<A-8> <Plug>(RegisterWholeWORDOperator)
+    endif
     if ! hasmapto('<Plug>(ChangeWORDOperator)', 'n')
 	nmap gcg<A-8> <Plug>(ChangeWORDOperator)
     endif
     if ! hasmapto('<Plug>(DeleteWORDOperator)', 'n')
 	nmap gxg<A-8> <Plug>(DeleteWORDOperator)
+    endif
+    if ! hasmapto('<Plug>(RegisterWORDOperator)', 'n')
+	nmap grg<A-8> <Plug>(RegisterWORDOperator)
     endif
     if ! hasmapto('<Plug>(ChangeOperatorOperator)', 'n')
 	nmap <Leader>gc <Plug>(ChangeOperatorOperator)
@@ -192,11 +210,17 @@ if ! exists('g:ChangeGlobally_no_mappings')
     if ! hasmapto('<Plug>(DeleteOperatorOperator)', 'n')
 	nmap <Leader>gx <Plug>(DeleteOperatorOperator)
     endif
+    if ! hasmapto('<Plug>(RegisterOperatorOperator)', 'n')
+	nmap <Leader>gr <Plug>(RegisterOperatorOperator)
+    endif
     if ! hasmapto('<Plug>(ChangeSelectionOperator)', 'v')
 	xmap <Leader>gc <Plug>(ChangeSelectionOperator)
     endif
     if ! hasmapto('<Plug>(DeleteSelectionOperator)', 'v')
 	xmap <Leader>gx <Plug>(DeleteSelectionOperator)
+    endif
+    if ! hasmapto('<Plug>(RegisterSelectionOperator)', 'v')
+	xmap <Leader>gr <Plug>(RegisterSelectionOperator)
     endif
 endif
 
