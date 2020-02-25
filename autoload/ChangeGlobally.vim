@@ -61,13 +61,13 @@ function! ChangeGlobally#UnarmInsertMode()
 	unlet s:save_eventignore
     endif
 endfunction
-function! s:DeleteChangedText( deleteCommand ) abort
+function! s:GetChangedText( command ) abort
     " Need special case for "_ to still obtain the deleted text (without
     " permanently clobbering the register).
     if s:register ==# '_'
-	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:deleteCommand . '" | return getreg("\"")')
+	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:command . '" | return getreg("\"")')
     else
-	execute 'normal! "' . s:register . a:deleteCommand
+	execute 'normal! "' . s:register . a:command
 	return getreg(s:register)
     endif
 endfunction
@@ -99,7 +99,7 @@ function! ChangeGlobally#SourceOperator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+    let l:changedText = s:GetChangedText(s:isDelete ? 'y' : (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>"))
 
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     " Only apply the substitution [count] times. We do this via a
@@ -209,7 +209,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	return
     endif
 
-    let l:changedText = s:DeleteChangedText('d' . a:sourceTextObject)
+    let l:changedText = s:GetChangedText((s:isDelete ? 'y': 'd') . a:sourceTextObject)
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     if ! empty(a:SourceToPatternFuncref)
 	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
@@ -433,7 +433,6 @@ function! ChangeGlobally#Substitute( search, replace )
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
     if s:isDelete
-	let l:hasAbortedInsert = 1
 	let s:newText = ''
     else
 	let l:hasAbortedInsert = (changenr() <= s:originalChangeNr)
@@ -444,24 +443,24 @@ function! ChangeGlobally#Substitute( search, replace )
 	    " given. Convert to \r to work around this.
 	    let s:newText = substitute(s:newText, '\n', '\r', 'g')
 	endif
+
+	" To turn the change and following substitutions into a single change,
+	" first undo the deletion and insertion. (I couldn't get them combined
+	" with :undojoin across the :startinsert.)
+	" This also solves the special case when the changed text is contained
+	" in s:newText; without the undo, we would need to avoid re-applying the
+	" substitution over the just changed part of the line.
+	if ! l:hasAbortedInsert
+	    execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
+	endif
+	silent undo " the deletion of the changed text
     endif
-"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
+"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.)
 "****D echomsg '**** subst' string(a:search) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = a:search
     let l:replace = a:replace
 
-
-    " To turn the change and following substitutions into a single change, first
-    " undo the deletion and insertion. (I couldn't get them combined with
-    " :undojoin across the :startinsert.)
-    " This also solves the special case when the changed text is contained in
-    " s:newText; without the undo, we would need to avoid re-applying the
-    " substitution over the just changed part of the line.
-    if ! l:hasAbortedInsert
-	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
-    endif
-    silent undo " the deletion of the changed text
     call s:OperatorFinally()
 
 
