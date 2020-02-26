@@ -94,28 +94,28 @@ nnoremap <silent> <script> <Plug>(RegisterWholeWordOperator) :<C-u>call ChangeGl
 nnoremap <silent> <expr> <SID>(ChangeWordOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WordSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWordOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
 nnoremap <silent> <script> <Plug>(DeleteWordOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
-nnoremap <silent> <script> <Plug>(RegisterWordOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
+nnoremap <silent> <script> <Plug>(RegisterWordOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWordOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeWholeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WholeWORDSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWholeWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
 nnoremap <silent> <script> <Plug>(DeleteWholeWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
-nnoremap <silent> <script> <Plug>(RegisterWholeWORDOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
+nnoremap <silent> <script> <Plug>(RegisterWholeWORDOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWholeWORDOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeWORDOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#WORDSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
 nnoremap <silent> <script> <Plug>(DeleteWORDOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
-nnoremap <silent> <script> <Plug>(RegisterWORDOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
+nnoremap <silent> <script> <Plug>(RegisterWORDOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeWORDOperator)
 
 
 nnoremap <silent> <expr> <SID>(ChangeOperatorOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#OperatorSourceOperatorTarget')
 nnoremap <silent> <script> <Plug>(ChangeOperatorOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
 nnoremap <silent> <script> <Plug>(DeleteOperatorOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
-nnoremap <silent> <script> <Plug>(RegisterOperatorOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
+nnoremap <silent> <script> <Plug>(RegisterOperatorOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeOperatorOperator)
 
 nnoremap <silent> <expr> <SID>(ChangeSelectionOperator) ChangeGlobally#OperatorExpression('ChangeGlobally#SelectionSourceOperatorTarget')
 vnoremap <silent> <script> <Plug>(ChangeSelectionOperator)   :<C-u>call ChangeGlobally#SetParameters(0, v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
 vnoremap <silent> <script> <Plug>(DeleteSelectionOperator)   :<C-u>call ChangeGlobally#SetParameters(1, v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
-vnoremap <silent> <script> <Plug>(RegisterSelectionOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaCannotRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
+vnoremap <silent> <script> <Plug>(RegisterSelectionOperator) :<C-u>call ChangeGlobally#SetSourceRegisterParameters(v:count, 0, "\<lt>Plug>(ChangeAreaRepeat)", "\<lt>Plug>(ChangeAreaVisualRepeat)")<CR><SID>(ChangeSelectionOperator)
 
 
 
@@ -127,10 +127,10 @@ vnoremap <silent> <script> <Plug>(RegisterSelectionOperator) :<C-u>call ChangeGl
 nnoremap <silent> <Plug>(ChangeAreaRepeat)
 \ :<C-u>call setline('.', getline('.'))<Bar>
 \let &opfunc = 'ChangeGlobally#RepeatOperatorTarget'<Bar>normal! .<CR>
-" Unfortunately, this only works for delete; for change, the text editing itself
-" is the last command that gets repeated; the original {motion} got lost. All we
-" can do is thwart the native repeat (i.e. insert of the text at the current
-" position) and give a hint.
+" Unfortunately, this only works for delete and replacement with register; for
+" change, the text editing itself is the last command that gets repeated; the
+" original {motion} got lost. All we can do is thwart the native repeat (i.e.
+" insert of the text at the current position) and give a hint.
 nnoremap <silent> <Plug>(ChangeAreaCannotRepeat)
 \ :execute "normal! \<lt>C-\>\<lt>C-n>\<lt>Esc>"<Bar>
 \echomsg 'Cannot repeat on the same {motion}' . (exists('g:loaded_visualrepeat') && g:loaded_visualrepeat ? '; select the new target area and repeat from visual mode instead' : '')<CR>
