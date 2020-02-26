@@ -462,6 +462,13 @@ function! ChangeGlobally#Substitute( search, replace )
 	silent undo " the deletion of the changed text
     elseif ! empty(s:sourceRegister)
 	let s:newText = substitute(getreg(s:sourceRegister), '\n', '\r', 'g')
+
+	" DWIM: When the text to be replaced does not end with a newline but the
+	" replacement does, drop off that trailing newline. Note: The newline
+	" already is escaped (as \n in a:search and \r in s:newText).
+	if a:search !~# '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\n$' && getregtype(s:sourceRegister) ==# 'V' && s:newText =~# '\r$'
+	    let s:newText = s:newText[0:-2]
+	endif
     else
 	let s:newText = ''
     endif
