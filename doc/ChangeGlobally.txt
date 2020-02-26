@@ -32,7 +32,10 @@ something like :s/\=@"/\=@./g to the line or buffer.
 SEE ALSO								     *
 
 - ReplaceWithRegister (vimscript #2703) simplifies another frequent editing
-  task: Replace the selection with the contents of register.
+  task: Replace the moved-over text / selection with the contents of register.
+  Compared to the gr... and <Leader>gr mappings here, it provides a quicker
+  way to replace single instances, and can also correctly deal with blockwise
+  register contents.
 - ChangeGloballySmartCase (vimscript #4322) is an add-on to this plugin that
   implements a |gC| variant that uses a "smart case" substitution which covers
   variations in upper-/lowercase ("maxSize" vs. "MaxSize") as well as

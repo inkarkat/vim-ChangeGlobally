@@ -23,7 +23,10 @@ something like :s/\\=@"/\\=@./g to the line or buffer.
 ### SEE ALSO
 
 - ReplaceWithRegister ([vimscript #2703](http://www.vim.org/scripts/script.php?script_id=2703)) simplifies another frequent editing
-  task: Replace the selection with the contents of register.
+  task: Replace the moved-over text / selection with the contents of register.
+  Compared to the gr... and &lt;Leader&gt;gr mappings here, it provides a quicker
+  way to replace single instances, and can also correctly deal with blockwise
+  register contents.
 - ChangeGloballySmartCase ([vimscript #4322](http://www.vim.org/scripts/script.php?script_id=4322)) is an add-on to this plugin that
   implements a gC variant that uses a "smart case" substitution which covers
   variations in upper-/lowercase ("maxSize" vs. "MaxSize") as well as
@@ -127,6 +130,10 @@ USAGE
                             and apply the deletion to all / the first [N]
                             occurrences inside {motion} text.
 
+    [N]["x]gr*{motion}      Delete the current whole \<word\> and replace all /
+                            the first [N] occurrences with the contents of the
+                            default register / register x inside {motion} text.
+
     [N]["x]gcg*{motion}     Delete the current word [into register x] and
                             start inserting. After exiting insert mode, that text
                             substitution is applied to all / the first [N]
@@ -136,8 +143,12 @@ USAGE
                             apply the deletion to all / the first [N] occurrences
                             inside {motion} text.
 
+    [N]["x]grg*{motion}     Delete the current word and replace all / the first
+                            [N] occurrences with the contents of the default
+                            register / register x inside {motion} text.
+
     [N]["x]gc_ALT-8{motion} Delete the current whole \_sWORD\_s [into register x]
-                            and ALT-8t inserting. After exiting insert mode, that
+                            and start inserting. After exiting insert mode, that
                             text substitution is applied to all / the first [N]
                             occurrences inside {motion} text.
 
@@ -145,14 +156,22 @@ USAGE
                             and apply the deletion to all / the first [N]
                             occurrences inside {motion} text.
 
-    [N]["x]gcg_ALT-8{motion}Delete the current WORD [into register x] and
-                            ALT-8t inserting. After exiting insert mode, that text
+    [N]["x]gr_ALT-8{motion} Delete the current whole \_sWORD\_s and replace all /
+                            the first [N] occurrences with the contents of the
+                            default register / register x inside {motion} text.
+
+    [N]["x]gcg_ALT-8{motion}Delete the current WORD [into register x] and start
+                            inserting. After exiting insert mode, that text
                             substitution is applied to all / the first [N]
                             occurrences inside {motion} text.
 
     [N]["x]gxg_ALT-8{motion}Delete the current WORD [into register x] and
                             apply the deletion to all / the first [N] occurrences
                             inside {motion} text.
+
+    [N]["x]gr_gALT-8{motion}Delete the current WORD and replace all / the first
+                            [N] occurrences with the contents of the default
+                            register / register x inside {motion} text.
 
     [N]["x]<Leader>gc{source-motion}{target-motion}
                             Delete {source-motion} text [into register x] and
@@ -173,6 +192,15 @@ USAGE
                             Delete the selected text [into register x] and apply
                             the deletion to all / the first [N] occurrences inside
                             {motion} text.
+
+    [N]["x]<Leader>gr{source-motion}{target-motion}
+                            Delete {source-motion} text and replace all / the
+                            first [N] occurrences with the contents of the default
+                            register / register x inside {target-motion} text.
+    {Visual}[N]["x]<Leader>gr{motion}
+                            Delete the selected text and replace all / the first
+                            [N] occurrences with the contents of the default
+                            register / register x inside {target-motion} text.
 
                             When any of these commands is repeated via ., the
                             previous substitution of the same source text is
@@ -288,16 +316,22 @@ your vimrc):
 
     nmap gc* <Plug>(ChangeWholeWordOperator)
     nmap gx* <Plug>(DeleteWholeWordOperator)
+    nmap gr* <Plug>(RegisterWholeWordOperator)
     nmap gcg* <Plug>(ChangeWordOperator)
     nmap gxg* <Plug>(DeleteWordOperator)
+    nmap grg* <Plug>(RegisterWordOperator)
     nmap gc<A-8> <Plug>(ChangeWholeWORDOperator)
     nmap gx<A-8> <Plug>(DeleteWholeWORDOperator)
+    nmap gr<A-8> <Plug>(RegisterWholeWORDOperator)
     nmap gcg<A-8> <Plug>(ChangeWORDOperator)
     nmap gxg<A-8> <Plug>(DeleteWORDOperator)
+    nmap grg<A-8> <Plug>(RegisterWORDOperator)
     nmap <Leader>gc <Plug>(ChangeOperatorOperator)
     nmap <Leader>gx <Plug>(DeleteOperatorOperator)
+    nmap <Leader>gr <Plug>(RegisterOperatorOperator)
     xmap <Leader>gc <Plug>(ChangeSelectionOperator)
     xmap <Leader>gx <Plug>(DeleteSelectionOperator)
+    xmap <Leader>gr <Plug>(RegisterSelectionOperator)
 
 LIMITATIONS
 ------------------------------------------------------------------------------
@@ -314,6 +348,11 @@ below).
 
 HISTORY
 ------------------------------------------------------------------------------
+
+##### 2.10    RELEASEME
+- ENH: Add gr\*, grg\*, gr&lt;A-8&gt;, grg&lt;A-8&gt;, &lt;Leader&gt;gr mappings that replace with
+  register contents instead of the changed text / deleting (and capturing in a
+  register).
 
 ##### 2.01    24-Feb-2020
 - Support {target-motion} of gv in &lt;Leader&gt;gc and &lt;Leader&gt;gx to replace in
