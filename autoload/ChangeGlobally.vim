@@ -281,19 +281,7 @@ function! ChangeGlobally#VisualRepeat()
 endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
     let s:save_visualarea = [getpos("'<"), getpos("'>"), visualmode()]
-    let &opfunc = a:opfunc
-
-    let l:keys = 'g@'
-
-    if ! &l:modifiable || &l:readonly
-	" Probe for "Cannot make changes" error and readonly warning via a no-op
-	" dummy modification.
-	" In the case of a nomodifiable buffer, Vim will abort the normal mode
-	" command chain, discard the g@, and thus not invoke the operatorfunc.
-	let l:keys = ":call setline('.', getline('.'))\<CR>" . l:keys
-    endif
-
-    return l:keys
+    return ingo#mapmaker#OpfuncExpression(a:opfunc)
 endfunction
 function! s:OperatorFinally() abort
     if exists('s:save_visualarea')

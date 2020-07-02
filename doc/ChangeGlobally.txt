@@ -269,7 +269,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					 *ChangeGlobally-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.040 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.042 or
   higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - visualrepeat.vim (vimscript #3848) plugin (version 2.00 or higher; optional)
@@ -361,6 +361,7 @@ HISTORY						      *ChangeGlobally-history*
 - ENH: Add gr*, grg*, gr<A-8>, grg<A-8>, <Leader>gr mappings that replace with
   register contents instead of the changed text / deleting (and capturing in a
   register).
+  *** You need to update to ingo-library (vimscript #4433) version 1.042! ***
 
 2.01	24-Feb-2020
 - Support {target-motion} of |gv| in <Leader>gc and <Leader>gx to replace in

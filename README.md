@@ -263,7 +263,7 @@ To uninstall, use the :RmVimball command.
 ### DEPENDENCIES
 
 - Requires Vim 7.0 or higher.
-- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.040 or
+- Requires the ingo-library.vim plugin ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)), version 1.042 or
   higher.
 - repeat.vim ([vimscript #2136](http://www.vim.org/scripts/script.php?script_id=2136)) plugin (optional)
 - visualrepeat.vim ([vimscript #3848](http://www.vim.org/scripts/script.php?script_id=3848)) plugin (version 2.00 or higher; optional)
@@ -353,6 +353,8 @@ HISTORY
 - ENH: Add gr\*, grg\*, gr&lt;A-8&gt;, grg&lt;A-8&gt;, &lt;Leader&gt;gr mappings that replace with
   register contents instead of the changed text / deleting (and capturing in a
   register).
+
+__You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.042!__
 
 ##### 2.01    24-Feb-2020
 - Support {target-motion} of gv in &lt;Leader&gt;gc and &lt;Leader&gt;gx to replace in
