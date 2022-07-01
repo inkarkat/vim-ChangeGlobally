@@ -5,7 +5,7 @@
 "   - repeat.vim (vimscript #2136) plugin (optional)
 "   - visualrepeat.vim (vimscript #3848) plugin (optional)
 "
-" Copyright: (C) 2012-2020 Ingo Karkat
+" Copyright: (C) 2012-2022 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -445,7 +445,14 @@ function! ChangeGlobally#Substitute( search, replace )
 	" in s:newText; without the undo, we would need to avoid re-applying the
 	" substitution over the just changed part of the line.
 	if ! l:hasAbortedInsert
-	    execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
+	    if ingo#compat#window#IsCmdlineWindow()
+		" XXX: :undo {n} gives "E11: Invalid in command-line window"; single :undo works, though.
+		while changenr() > s:originalChangeNr
+		    silent undo
+		endwhile
+	    else
+		execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
+	    endif
 	endif
 	silent undo " the deletion of the changed text
     elseif ! empty(s:sourceRegister)

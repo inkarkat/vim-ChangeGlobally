@@ -361,6 +361,8 @@ HISTORY						      *ChangeGlobally-history*
 - ENH: Add gr*, grg*, gr<A-8>, grg<A-8>, <Leader>gr mappings that replace with
   register contents instead of the changed text / deleting (and capturing in a
   register).
+- Work around "E11: Invalid in command-line window" when executed in the
+  command-line window.
   *** You need to update to ingo-library (vimscript #4433) version 1.042! ***
 
 2.01	24-Feb-2020
@@ -433,7 +435,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2020 Ingo Karkat
+Copyright: (C) 2012-2022 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

@@ -353,6 +353,8 @@ HISTORY
 - ENH: Add gr\*, grg\*, gr&lt;A-8&gt;, grg&lt;A-8&gt;, &lt;Leader&gt;gr mappings that replace with
   register contents instead of the changed text / deleting (and capturing in a
   register).
+- Work around "E11: Invalid in command-line window" when executed in the
+  command-line window.
 
 __You need to update to ingo-library ([vimscript #4433](http://www.vim.org/scripts/script.php?script_id=4433)) version 1.042!__
 
@@ -429,7 +431,7 @@ insert and using the original start position instead of the start change mark.
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2012-2020 Ingo Karkat -
+Copyright: (C) 2012-2022 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
