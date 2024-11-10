@@ -357,7 +357,7 @@ below).
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
 
-2.10	RELEASEME
+2.10	10-Nov-2024
 - ENH: Add gr*, grg*, gr<A-8>, grg<A-8>, <Leader>gr mappings that replace with
   register contents instead of the changed text / deleting (and capturing in a
   register).
@@ -435,7 +435,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2022 Ingo Karkat
+Copyright: (C) 2012-2024 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

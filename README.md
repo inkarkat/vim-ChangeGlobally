@@ -349,7 +349,7 @@ below).
 HISTORY
 ------------------------------------------------------------------------------
 
-##### 2.10    RELEASEME
+##### 2.10    10-Nov-2024
 - ENH: Add gr\*, grg\*, gr&lt;A-8&gt;, grg&lt;A-8&gt;, &lt;Leader&gt;gr mappings that replace with
   register contents instead of the changed text / deleting (and capturing in a
   register).
@@ -431,7 +431,7 @@ insert and using the original start position instead of the start change mark.
 - Started development.
 
 ------------------------------------------------------------------------------
-Copyright: (C) 2012-2022 Ingo Karkat -
+Copyright: (C) 2012-2024 Ingo Karkat -
 The [VIM LICENSE](http://vimdoc.sourceforge.net/htmldoc/uganda.html#license) applies to this plugin.
 
 Maintainer:     Ingo Karkat &lt;ingo@karkat.de&gt;
