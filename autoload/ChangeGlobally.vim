@@ -5,17 +5,24 @@
 "   - repeat.vim (vimscript #2136) plugin (optional)
 "   - visualrepeat.vim (vimscript #3848) plugin (optional)
 "
-" Copyright: (C) 2012-2020 Ingo Karkat
+" Copyright: (C) 2012-2022 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! ChangeGlobally#SetParameters( isDelete, count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
+function! ChangeGlobally#SetParameters( ... )
+    let [s:sourceRegister, s:targetRegister] = ['', v:register]
+    call call('s:SetParameters', a:000)
+endfunction
+function! ChangeGlobally#SetSourceRegisterParameters( ... ) abort
+    let [s:sourceRegister, s:targetRegister] = [v:register, '_']
+    call call('s:SetParameters', [1] + a:000)
+endfunction
+function! s:SetParameters( isDelete, count, isVisualMode, repeatMapping, visualrepeatMapping, ... )
     let s:pos = getpos('.')
-    let s:isDelete = a:isDelete
-    let s:register = v:register
+    let s:isChange = ! a:isDelete
     let [s:isVisualMode, s:repeatMapping, s:visualrepeatMapping] = [a:isVisualMode, a:repeatMapping, a:visualrepeatMapping]
 
     if g:ChangeGlobally_ConfirmCount > 0 && a:count == g:ChangeGlobally_ConfirmCount
@@ -61,14 +68,14 @@ function! ChangeGlobally#UnarmInsertMode()
 	unlet s:save_eventignore
     endif
 endfunction
-function! s:DeleteChangedText( deleteCommand ) abort
+function! s:GetChangedText( command ) abort
     " Need special case for "_ to still obtain the deleted text (without
     " permanently clobbering the register).
-    if s:register ==# '_'
-	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:deleteCommand . '" | return getreg("\"")')
+    if s:targetRegister ==# '_'
+	return ingo#register#KeepRegisterExecuteOrFunc('execute "normal! ' . a:command . '" | return getreg("\"")')
     else
-	execute 'normal! "' . s:register . a:deleteCommand
-	return getreg(s:register)
+	execute 'normal! "' . s:targetRegister . a:command
+	return getreg(s:targetRegister)
     endif
 endfunction
 function! ChangeGlobally#SourceOperator( type )
@@ -99,7 +106,7 @@ function! ChangeGlobally#SourceOperator( type )
     " For linewise deletion, the "s" command collapses all line(s) into a single
     " one. We insert and remove a dummy character to keep the indent, then leave
     " insert mode, to be re-entered via :startinsert!
-    let l:changedText = s:DeleteChangedText(s:isDelete || s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>")
+    let l:changedText = s:GetChangedText(s:isChange ? (s:range ==# 'line' ? 'd' : "s$\<BS>\<Esc>") : 'y')
 
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     " Only apply the substitution [count] times. We do this via a
@@ -114,7 +121,7 @@ function! ChangeGlobally#SourceOperator( type )
     " reference it from ChangeGlobally#CountedReplace().
     let l:replace = '\=ChangeGlobally#CountedReplace()'
 
-    if s:isDelete
+    if ! s:isChange
 	" For a global deletion, we don't need to set up and go to insert mode;
 	" just record what got deleted, and reapply that.
 
@@ -209,7 +216,7 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
 	return
     endif
 
-    let l:changedText = s:DeleteChangedText('d' . a:sourceTextObject)
+    let l:changedText = s:GetChangedText((s:isChange ? 'd': 'y') . a:sourceTextObject)
     let l:search = '\C' . ingo#regexp#EscapeLiteralText(l:changedText, '/')
     if ! empty(a:SourceToPatternFuncref)
 	let l:search = call(a:SourceToPatternFuncref, [l:changedText, l:search])
@@ -222,9 +229,10 @@ function! s:GivenSourceOperatorTarget( sourcePattern, sourceTextObject, SourceTo
     " quoted argument.
     let l:replace = '\=ChangeGlobally#CountedAreaReplace("ChangeGlobally#AreaReplaceSecondPass()")'
 
-    if s:isDelete
-	" For a global deletion, we don't need to set up and go to insert mode;
-	" just record what got deleted, and reapply that.
+    if ! s:isChange
+	" For a global deletion / replacement with register contents, we don't
+	" need to set up and go to insert mode; just record what got deleted,
+	" and reapply that.
 
 	" Not needed for deletion.
 	let s:originalChangeNr = -1
@@ -273,19 +281,7 @@ function! ChangeGlobally#VisualRepeat()
 endfunction
 function! ChangeGlobally#OperatorExpression( opfunc )
     let s:save_visualarea = [getpos("'<"), getpos("'>"), visualmode()]
-    let &opfunc = a:opfunc
-
-    let l:keys = 'g@'
-
-    if ! &l:modifiable || &l:readonly
-	" Probe for "Cannot make changes" error and readonly warning via a no-op
-	" dummy modification.
-	" In the case of a nomodifiable buffer, Vim will abort the normal mode
-	" command chain, discard the g@, and thus not invoke the operatorfunc.
-	let l:keys = ":call setline('.', getline('.'))\<CR>" . l:keys
-    endif
-
-    return l:keys
+    return ingo#mapmaker#OpfuncExpression(a:opfunc)
 endfunction
 function! s:OperatorFinally() abort
     if exists('s:save_visualarea')
@@ -432,10 +428,7 @@ endfunction
 function! ChangeGlobally#Substitute( search, replace )
     let l:changeStartVirtCol = virtcol("'[") " Need to save this, both :undo and the check substitution will set the column to 1.
 
-    if s:isDelete
-	let l:hasAbortedInsert = 1
-	let s:newText = ''
-    else
+    if s:isChange
 	let l:hasAbortedInsert = (changenr() <= s:originalChangeNr)
 	let l:isMultiChangeInsert = (changenr() > s:originalChangeNr + 1)
 	let s:newText = s:GetInsertion(s:range, l:isMultiChangeInsert)
@@ -444,24 +437,42 @@ function! ChangeGlobally#Substitute( search, replace )
 	    " given. Convert to \r to work around this.
 	    let s:newText = substitute(s:newText, '\n', '\r', 'g')
 	endif
+
+	" To turn the change and following substitutions into a single change,
+	" first undo the deletion and insertion. (I couldn't get them combined
+	" with :undojoin across the :startinsert.)
+	" This also solves the special case when the changed text is contained
+	" in s:newText; without the undo, we would need to avoid re-applying the
+	" substitution over the just changed part of the line.
+	if ! l:hasAbortedInsert
+	    if ingo#compat#window#IsCmdlineWindow()
+		" XXX: :undo {n} gives "E11: Invalid in command-line window"; single :undo works, though.
+		while changenr() > s:originalChangeNr
+		    silent undo
+		endwhile
+	    else
+		execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
+	    endif
+	endif
+	silent undo " the deletion of the changed text
+    elseif ! empty(s:sourceRegister)
+	let s:newText = substitute(getreg(s:sourceRegister), '\n', '\r', 'g')
+
+	" DWIM: When the text to be replaced does not end with a newline but the
+	" replacement does, drop off that trailing newline. Note: The newline
+	" already is escaped (as \n in a:search and \r in s:newText).
+	if a:search !~# '\%(\%(^\|[^\\]\)\%(\\\\\)*\\\)\@<!\\n$' && getregtype(s:sourceRegister) ==# 'V' && s:newText =~# '\r$'
+	    let s:newText = s:newText[0:-2]
+	endif
+    else
+	let s:newText = ''
     endif
-"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.) l:hasAbortedInsert l:isMultiChangeInsert
+"****D echomsg '****' string(s:insertStartPos) string(getpos("'[")) string(getpos("']")) string(@.)
 "****D echomsg '**** subst' string(a:search) string(@.) string(s:newText)
     " For :substitute, we need to convert newlines in both parts (differently).
     let l:search = a:search
     let l:replace = a:replace
 
-
-    " To turn the change and following substitutions into a single change, first
-    " undo the deletion and insertion. (I couldn't get them combined with
-    " :undojoin across the :startinsert.)
-    " This also solves the special case when the changed text is contained in
-    " s:newText; without the undo, we would need to avoid re-applying the
-    " substitution over the just changed part of the line.
-    if ! l:hasAbortedInsert
-	execute 'silent undo' s:originalChangeNr | " undo the insertion of s:newText
-    endif
-    silent undo " the deletion of the changed text
     call s:OperatorFinally()
 
 
@@ -514,17 +525,17 @@ function! ChangeGlobally#Substitute( search, replace )
 	" use '[, '] instead of the . range.
 	let l:range = (s:isBeyondLineSubstitution ? l:beyondLineRange : "'[,']")
     elseif s:range ==# 'buffer'
-	if s:isDelete
-	    " Keep the trailing newline so that the entire line(s) are deleted
-	    " without leaving an empty line behind.
-	    let s:substitution = ['^', l:search, '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
-	else
+	if s:isChange || ! empty(s:sourceRegister)
 	    " We need to remove the trailing newline in the search pattern and
 	    " anchor the search to the beginning and end of a line, so that only
 	    " entire lines are substituted. Were we to alternatively append a \r
 	    " to the replacement, the next line would be involved and the cursor
 	    " misplaced.
 	    let s:substitution = ['^', substitute(l:search, '\\n$', '', ''), '$', '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
+	else
+	    " Keep the trailing newline so that the entire line(s) are deleted
+	    " without leaving an empty line behind.
+	    let s:substitution = ['^', l:search, '/', l:replace, '/', (s:isConfirm ? 'c' : '')]
 	endif
 
 	let l:range = (s:count ? '.,$' : '%')

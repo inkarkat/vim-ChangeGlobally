@@ -32,7 +32,10 @@ something like :s/\=@"/\=@./g to the line or buffer.
 SEE ALSO								     *
 
 - ReplaceWithRegister (vimscript #2703) simplifies another frequent editing
-  task: Replace the selection with the contents of register.
+  task: Replace the moved-over text / selection with the contents of register.
+  Compared to the gr... and <Leader>gr mappings here, it provides a quicker
+  way to replace single instances, and can also correctly deal with blockwise
+  register contents.
 - ChangeGloballySmartCase (vimscript #4322) is an add-on to this plugin that
   implements a |gC| variant that uses a "smart case" substitution which covers
   variations in upper-/lowercase ("maxSize" vs. "MaxSize") as well as
@@ -140,6 +143,10 @@ USAGE							*ChangeGlobally-usage*
 [N]["x]gx*{motion}	Delete the current whole \<word\> [into register x]
 			and apply the deletion to all / the first [N]
 			occurrences inside {motion} text.
+								     *gr_star*
+[N]["x]gr*{motion}	Delete the current whole \<word\> and replace all /
+			the first [N] occurrences with the contents of the
+			default register / register x inside {motion} text.
 								    *gcg_star*
 [N]["x]gcg*{motion}	Delete the current word [into register x] and
 			start inserting. After exiting insert mode, that text
@@ -149,24 +156,36 @@ USAGE							*ChangeGlobally-usage*
 [N]["x]gxg*{motion}	Delete the current word [into register x] and
 			apply the deletion to all / the first [N] occurrences
 			inside {motion} text.
+								    *grg_star*
+[N]["x]grg*{motion}	Delete the current word and replace all / the first
+			[N] occurrences with the contents of the default
+			register / register x inside {motion} text.
 								    *gc_ALT-8*
 [N]["x]gc_ALT-8{motion}	Delete the current whole \_sWORD\_s [into register x]
-			and ALT-8t inserting. After exiting insert mode, that
+			and start inserting. After exiting insert mode, that
 			text substitution is applied to all / the first [N]
 			occurrences inside {motion} text.
 								    *gx_ALT-8*
 [N]["x]gx_ALT-8{motion}	Delete the current whole \_sWORD\_s [into register x]
 			and apply the deletion to all / the first [N]
 			occurrences inside {motion} text.
+								    *gr_ALT-8*
+[N]["x]gr_ALT-8{motion}	Delete the current whole \_sWORD\_s and replace all /
+			the first [N] occurrences with the contents of the
+			default register / register x inside {motion} text.
 								   *gcg_ALT-8*
-[N]["x]gcg_ALT-8{motion}Delete the current WORD [into register x] and
-			ALT-8t inserting. After exiting insert mode, that text
+[N]["x]gcg_ALT-8{motion}Delete the current WORD [into register x] and start
+			inserting. After exiting insert mode, that text
 			substitution is applied to all / the first [N]
 			occurrences inside {motion} text.
 								   *gxg_ALT-8*
 [N]["x]gxg_ALT-8{motion}Delete the current WORD [into register x] and
 			apply the deletion to all / the first [N] occurrences
 			inside {motion} text.
+								   *grg_ALT-8*
+[N]["x]gr_gALT-8{motion}Delete the current WORD and replace all / the first
+			[N] occurrences with the contents of the default
+			register / register x inside {motion} text.
 
 						   *<Leader>gc* *v_<Leader>gc*
 [N]["x]<Leader>gc{source-motion}{target-motion}
@@ -188,6 +207,15 @@ USAGE							*ChangeGlobally-usage*
 			Delete the selected text [into register x] and apply
 			the deletion to all / the first [N] occurrences inside
 			{motion} text.
+						   *<Leader>gr* *v_<Leader>gr*
+[N]["x]<Leader>gr{source-motion}{target-motion}
+			Delete {source-motion} text and replace all / the
+			first [N] occurrences with the contents of the default
+			register / register x inside {target-motion} text.
+{Visual}[N]["x]<Leader>gr{motion}
+			Delete the selected text and replace all / the first
+			[N] occurrences with the contents of the default
+			register / register x inside {target-motion} text.
 
 							   *ChangeArea-repeat*
 			When any of these commands is repeated via |.|, the
@@ -241,7 +269,7 @@ To uninstall, use the |:RmVimball| command.
 DEPENDENCIES					 *ChangeGlobally-dependencies*
 
 - Requires Vim 7.0 or higher.
-- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.040 or
+- Requires the |ingo-library.vim| plugin (vimscript #4433), version 1.042 or
   higher.
 - repeat.vim (vimscript #2136) plugin (optional)
 - visualrepeat.vim (vimscript #3848) plugin (version 2.00 or higher; optional)
@@ -290,16 +318,22 @@ your |vimrc|): >
 
     nmap gc* <Plug>(ChangeWholeWordOperator)
     nmap gx* <Plug>(DeleteWholeWordOperator)
+    nmap gr* <Plug>(RegisterWholeWordOperator)
     nmap gcg* <Plug>(ChangeWordOperator)
     nmap gxg* <Plug>(DeleteWordOperator)
+    nmap grg* <Plug>(RegisterWordOperator)
     nmap gc<A-8> <Plug>(ChangeWholeWORDOperator)
     nmap gx<A-8> <Plug>(DeleteWholeWORDOperator)
+    nmap gr<A-8> <Plug>(RegisterWholeWORDOperator)
     nmap gcg<A-8> <Plug>(ChangeWORDOperator)
     nmap gxg<A-8> <Plug>(DeleteWORDOperator)
+    nmap grg<A-8> <Plug>(RegisterWORDOperator)
     nmap <Leader>gc <Plug>(ChangeOperatorOperator)
     nmap <Leader>gx <Plug>(DeleteOperatorOperator)
+    nmap <Leader>gr <Plug>(RegisterOperatorOperator)
     xmap <Leader>gc <Plug>(ChangeSelectionOperator)
     xmap <Leader>gx <Plug>(DeleteSelectionOperator)
+    xmap <Leader>gr <Plug>(RegisterSelectionOperator)
 >
 ==============================================================================
 LIMITATIONS					  *ChangeGlobally-limitations*
@@ -322,6 +356,14 @@ below).
 
 ==============================================================================
 HISTORY						      *ChangeGlobally-history*
+
+2.10	10-Nov-2024
+- ENH: Add gr*, grg*, gr<A-8>, grg<A-8>, <Leader>gr mappings that replace with
+  register contents instead of the changed text / deleting (and capturing in a
+  register).
+- Work around "E11: Invalid in command-line window" when executed in the
+  command-line window.
+  *** You need to update to ingo-library (vimscript #4433) version 1.042! ***
 
 2.01	24-Feb-2020
 - Support {target-motion} of |gv| in <Leader>gc and <Leader>gx to replace in
@@ -393,7 +435,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2012-2020 Ingo Karkat
+Copyright: (C) 2012-2024 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
